@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Your Appointments</h2>
+
+    <h3>Appointments</h3>
+    {% for appointment in appointments %}
+        <p>
+            {% if user.role == "doctor" %}
+                Appointment with {{ appointment.patient.title }} {{ appointment.patient.first_name }} {{ appointment.patient.last_name }} on Date: {{ appointment.date_time }}
+            {% else %}
+                Appointment with {{ appointment.doctor.title }} {{ appointment.doctor.first_name }}{{ appointment.doctor.last_name }} on {{ appointment.date_time }}
+            {% endif %}
+        </p>
+    {% endfor %}
+
+{% endblock %}

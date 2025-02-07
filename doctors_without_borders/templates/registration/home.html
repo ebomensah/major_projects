@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+{% if user.is_authenticated %}
+    <h1> Hello {{user.title}} {{user.first_name}} {{user.last_name}}</h1>
+    <img id="profile-picture" src="{{user.profile.profile_picture.url}}" alt="Profile Picture" width="150" height="150">
+</img>
+    <h2>Welcome to Doctors Without Borders</h2>
+    <p>How can we help you today?</p>
+{% else %}
+<h1> You need to log in to see this page. </h1>
+{% endif %}
+{% endblock %}
