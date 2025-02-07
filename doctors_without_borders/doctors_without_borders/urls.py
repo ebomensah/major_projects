@@ -5,11 +5,14 @@ from django.conf.urls.static import static
 from rest_framework.routers import DefaultRouter
 from appointments.views import AppointmentViewSet, ConsultationViewSet
 from notifications.views import NotificationViewSet
+from users.views import CustomUserViewSet, ProfileViewSet
 
 router = DefaultRouter()
 router.register(r'appointments', AppointmentViewSet, basename='appointments')
 router.register(r'consultations', ConsultationViewSet, basename='consultations')
 router.register(r'notifications', NotificationViewSet, basename='notifications')
+router.register(r'users', CustomUserViewSet, basename='users')
+router.register(r'profiles', ProfileViewSet, basename='profiles')
 
 urlpatterns = [
     path('api/', include(router.urls)),

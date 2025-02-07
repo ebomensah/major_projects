@@ -1,97 +1,104 @@
-from django.shortcuts import render, redirect
-from django.views import View
 from django.contrib.auth import login, authenticate, logout
-from .forms import CustomUserCreationForm, ProfileUpdateForm, UserUpdateForm
-from django.contrib import messages
-from django.urls import reverse_lazy
-from django.views.generic import CreateView, UpdateView, TemplateView
-from .models import CustomUser, Profile
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib import messages
+from django.shortcuts import redirect
+from django.urls import reverse_lazy
+from rest_framework import viewsets, status
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.response import Response
+from rest_framework.decorators import action
+from .models import CustomUser, Profile
+from .serializers import CustomUserSerializer, ProfileSerializer, UserUpdateSerializer, LoginSerializer
 
-class RegistrationView(CreateView):
-    model = CustomUser
-    from_class = CustomUserCreationForm
-    template_name = 'registration/register.html'
-    success_url = reverse_lazy ('login')
+class CustomUserViewSet(viewsets.ModelViewSet):
+    queryset = CustomUser.objects.all()
+    serializer_class = CustomUserSerializer
 
-    def form_valid(self, form):        
-        user= form.save()
+    def get_permissions(self):
+        if self.action in ['update', 'partial_update', 'destroy']:
+            return [IsAuthenticated()]
+        return []
+
+    def perform_create(self, serializer):
+        user = serializer.save()
         login(self.request, user)
-        return super().form_valid(form)
-    
-    def get_form_class(self):
-        return CustomUserCreationForm
-    
 
-class LoginView(View):
-    def get(self, request):
-        return render(request, 'registration/login.html')
-
-    def post(self, request):
-        username = request.POST['username']
-        password = request.POST['password']
+    @action(detail=False, methods=['post'])
+    def login(self, request):
+        username = request.data.get('username')
+        password = request.data.get('password')
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            messages.success(request, 'Login successful.')
-            return redirect('home')  # Redirect to a success page
-        else:
-            messages.error(request, 'Invalid username or password.')
-            return render(request, 'registration/login.html')
+            return Response({'message': 'Login successful.'}, status=status.HTTP_200_OK)
+        return Response({'error': 'Invalid username or password.'}, status=status.HTTP_400_BAD_REQUEST)
 
-class LogoutView(View):
-    def get(self, request):
+    @action(detail=False, methods=['post'])
+    def logout(self, request):
         logout(request)
-        messages.success(request, 'You have been logged out.')
-        return redirect('login')  
-    
+        return Response({'message': 'Logout successful.'}, status=status.HTTP_200_OK)
 
-class HomeView(TemplateView, LoginRequiredMixin):
-    template_name = 'registration/home.html'
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def me(self, request):
+        serializer = self.get_serializer(request.user)
+        return Response(serializer.data)
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        user = self.request.user 
+class ProfileViewSet(viewsets.ModelViewSet):
+    queryset = Profile.objects.all()
+    serializer_class = ProfileSerializer
+    permission_classes = [IsAuthenticated]
 
-        if user.is_authenticated:
-            context['profile']= user.profile
-        else:
-            context['profile']= None
-        return context 
+    def get_queryset(self):
+        return Profile.objects.filter(user=self.request.user)
 
-class UserUpdateView(UpdateView):
-    model = CustomUser
-    form_class = UserUpdateForm
-    template_name = "registration/user_update.html"  
-    success_url = reverse_lazy('home') 
+    def get_serializer_class(self):
+        if self.action in ['update', 'partial_update']:
+            return UserUpdateSerializer
+        return ProfileSerializer
 
-    def get_object(self, queryset=None):
-        return self.request.user
+from rest_framework.views import APIView
+from rest_framework.authtoken.models import Token
 
-class ProfileUpdateView(UpdateView):
-    model = Profile
-    form_class = ProfileUpdateForm
-    template_name = "registration/profile_update.html"
-    success_url = reverse_lazy('home')
+class RegisterView(APIView):
+    permission_classes = [AllowAny]
 
-    def get_object(self, queryset=None):
-        return self.request.user.profile
+    def post(self, request):
+        serializer = CustomUserSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            token, created = Token.objects.get_or_create(user=user)
+            return Response(
+                {"message": "User registered successfully", "token": token.key},
+                status=status.HTTP_201_CREATED
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['user_form'] = UserUpdateForm(instance=self.request.user)
-        return context
 
-    def form_valid(self, form):
-        # Check if the request method is POST
-        if self.request.method == 'POST':
-            profile = form.save()
-            user_form = UserUpdateForm(self.request.POST, instance=self.request.user)
-            if user_form.is_valid():
-                user_form.save()
+class LoginView(APIView):
+    permission_classes = [AllowAny]
 
-            return redirect(self.success_url)
-        else:
-            # You can return some other response here if it's not a POST request
-            return super().form_invalid(form)
-# Create your views here.
+    def post(self, request):
+        serializer = LoginSerializer(data=request.data)
+        if serializer.is_valid():
+            username = serializer.validated_data["username"]
+            password = serializer.validated_data["password"]
+            user = authenticate(request, username=username, password=password)
+
+            if user:
+                login(request, user)
+                token, created = Token.objects.get_or_create(user=user)
+                return Response(
+                    {"message": "Login successful", "token": token.key},
+                    status=status.HTTP_200_OK
+                )
+            return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        request.user.auth_token.delete()  # Remove the authentication token
+        logout(request)
+        return Response({"message": "Logout successful"}, status=status.HTTP_200_OK)
