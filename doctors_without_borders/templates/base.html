@@ -5,26 +5,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Doctors Without Borders {% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}"> <!-- Link to your CSS file -->
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
 <body>
     <header>
-        <h1>Doctors Without Borders</h1>
-        <nav>
-            <ul>
-                <li><a href="{% url 'home' %}">Home</a></li>
-                <li><a href ="{% url 'update_profile' %}"> Update Profile</a></li>
-                <li><a href="{% url 'register' %}">Register</a></li>
-                <li><a href="{% url 'login' %}">Login</a></li>
-                <li><a href="{% url 'logout' %}"> Logout</a></li>
-            </ul>
-        </nav>
+        <h1>Welcome to Doctors Without Borders</h1>
     </header>
-    <main>
+    <div class="container">
         {% block content %}
-        <!-- Default content can go here -->
         {% endblock %}
-    </main>
+    </div>
+    <script src="{% static 'js/scripts.js' %}"></script>
     <footer>
         <p>&copy; 2025 DWB</p>
     </footer>

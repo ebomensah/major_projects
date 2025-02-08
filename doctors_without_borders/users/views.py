@@ -1,7 +1,7 @@
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from .models import CustomUser, Profile
 from .serializers import CustomUserSerializer, ProfileSerializer, UserUpdateSerializer, LoginSerializer
+from django.views.generic import TemplateView
 
 class CustomUserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
@@ -102,3 +103,6 @@ class LogoutView(APIView):
         request.user.auth_token.delete()  # Remove the authentication token
         logout(request)
         return Response({"message": "Logout successful"}, status=status.HTTP_200_OK)
+    
+class HomeView(TemplateView):
+    template_name = 'registration/home.html'
