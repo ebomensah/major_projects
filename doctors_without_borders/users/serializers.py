@@ -23,11 +23,10 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True)
 
 class ProfileSerializer(serializers.ModelSerializer):
-    user = CustomUserSerializer(read_only=True)
     
     class Meta:
         model = Profile
-        fields = ['id', 'user', 'bio', 'profile_picture']
+        fields = ['id', 'bio', 'profile_picture']
 
 class ProfileUpdateSerializer(serializers.ModelSerializer):
     class Meta:
