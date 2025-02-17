@@ -1,7 +1,14 @@
-<h1>Book an Appointment</h1>
+{% extends 'base.html' %}
 
-<form method="POST">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Save Appointment</button>
-</form>
+{% block content %}
+
+<div class="form-container">
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Book Appointment</button><br>
+
+        <a href="{% url 'appointments_list' %}">Return to Appointments list </a>
+    </form>
+</div>
+{% endblock %}

@@ -2,17 +2,68 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.shortcuts import redirect, render
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from .models import CustomUser, Profile
 from .serializers import CustomUserSerializer, ProfileSerializer, UserUpdateSerializer, LoginSerializer
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, View, UpdateView
 from django.http import JsonResponse
 from django.middleware.csrf import get_token
 from rest_framework import serializers 
+from django.contrib.auth.views import LogoutView, LoginView
+from .forms import CustomUserCreationForm, UserUpdateForm, ProfileUpdateForm
+from django.contrib.auth.decorators import login_required
+
+
+
+class ProfileUpdateView(UpdateView):
+    model = Profile
+    form_class = ProfileUpdateForm
+    template_name = 'registration/profile_update.html'
+    success_url = reverse_lazy('home')
+
+    def get_object(self):
+        return self.request.user.profile  # Fetch the profile of the logged-in user
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Your profile has been updated successfully!')
+        return super().form_valid(form)
+        
+
+
+class CustomLoginView(LoginView):
+    template_name = 'registration/login.html'
+
+    def get_success_url(self):
+        return reverse('home')
+    
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+
+@method_decorator(csrf_exempt, name='dispatch')
+class CustomLogoutView(LogoutView):
+    def dispatch(self, request, *args, **kwargs):
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':  # Check if AJAX
+            self.logout(request)
+            return JsonResponse({"message": "Logged out"}, status=200)  # Return JSON for AJAX
+        return redirect ('login')
+
+class CustomRegisterView(View):
+    def get(self, request):
+        form = CustomUserCreationForm()
+        return render(request, 'registration/register.html', {'form': form})
+
+    def post(self, request):
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Your account has been created!')
+            return redirect('login')
+        return render(request, 'registration/register.html', {'form': form})
+
 
 class CustomUserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
@@ -90,5 +141,15 @@ class LogoutView(APIView):
 class HomeView(TemplateView):
     template_name = 'registration/home.html'
 
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('login')
+        return super().dispatch(request, *args, **kwargs)
+
 def csrf_token_view(request):
     return JsonResponse({"csrfToken": get_token(request)})
+
+
+
+
+

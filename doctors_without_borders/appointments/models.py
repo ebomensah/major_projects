@@ -16,7 +16,7 @@ class Appointment(models.Model):
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default = 'scheduled')
     reason = models.TextField(blank= True, null=True)
     notes = models.TextField(blank=True, null=True)
-
+    
     def __str__(self):
         return f"{self.patient.title} {self.patient.first_name} {self.patient.last_name}'s Appointment with Dr. {self.doctor.first_name} {self.doctor.last_name} on {self.date_time}"
 

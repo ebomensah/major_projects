@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+    
+<div class="form-container">
+    <h2>Consultation</h2>
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Save Changes</button><br>
+
+        <a href="{% url 'consultations_list' %}"> Return to consultation list </a>
+    </form>
+</div>
+
+
+{% endblock %}

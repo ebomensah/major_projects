@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Consultation Details</h2>
+    <p><strong>Patient:</strong> {{ consultation.appointment.patient.first_name }} {{ consultation.appointment.patient.last_name }}</p>
+    <p><strong>Doctor:</strong> {{ consultation.appointment.doctor.first_name }} {{ consultation.appointment.doctor.last_name }}</p>
+    <p><strong>History:</strong> {{ consultation.history }}</p>
+    <p><strong>Examination Findings:</strong> {{ consultation.examination_findings }}</p>
+    <p><strong>Prescriptions:</strong> {{ consultation.prescriptions }}</p>
+    <p><strong>Review Date:</strong> {{ consultation.review_date }}</p>
+
+    {% if user.role == 'doctor' %}
+        <a href="{% url 'consultation-update' consultation.id %}">Edit</a>
+        <a href="{% url 'consultation-delete' consultation.id %}">Delete</a>
+    {% endif %}
+{% endblock %}

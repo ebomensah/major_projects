@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Consultations</h2>
+    <ul>
+        {% for consultation in consultations %}
+            <li>
+                <a href="{% url 'consultation-detail' consultation.id %}">
+                    {{ consultation.appointment.patient}} - {{ conultation.appointment.date_time }} for {{ consultation.appointment.reason }}
+                </a>
+            </li>
+                
+        {% empty %}
+            <li>No consultation available</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

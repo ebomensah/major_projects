@@ -1,19 +1,41 @@
 {% extends 'base.html' %}
 
-{% block title %}Login{% endblock %}
-
 {% block content %}
-    <h2>Login</h2>
-    <form method="post" enctype = "multipart/form-data" action="{% url 'login' %}">
-        {% csrf_token %}
-        <div>
-            <label for="username">Username:</label>
-            <input type="text" id="username" name="username" required>
-        </div>
-        <div>
-            <label for="password">Password:</label>
-            <input type="password" id="password" name="password" required>
-        </div>
-        <button type="submit">Login</button>
-    </form>
+    <div class="form-container">
+        <h2>Login</h2>
+        <form method="POST">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Login</button>
+        </form>
+    </div>
+    <br>
+    <p> Don't have an account? 
+    <a href="{% url 'register' %}">Create One </a>
+    </p>
+
+<script>
+document.getElementById("login-form").addEventListener("submit", function(event) {
+    event.preventDefault();
+    
+    let username = document.getElementById("username").value;
+    let password = document.getElementById("password").value;
+
+    fetch("/api/login/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: username, password: password })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message) {
+            alert("Login successful!");
+            window.location.href = "/";  // Redirect to homepage
+        } else {
+            alert("Invalid credentials");
+        }
+    })
+    .catch(error => console.error("Error:", error));
+});
+</script>
 {% endblock %}

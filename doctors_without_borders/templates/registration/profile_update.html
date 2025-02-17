@@ -1,7 +1,13 @@
-<h2>Update Profile</h2>
-<form method="POST" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ user_form.as_p }}
-    {{ form.as_p }}
-    <button type="submit">Update</button>
-</form>
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="form-container">
+    <h2>Update Profile</h2>
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ user_form.as_p }}
+        {{ form.as_p }}
+        <button type="submit">Update</button>
+    </form>
+</div>
+{% endblock %}
