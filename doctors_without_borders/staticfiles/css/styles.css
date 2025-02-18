@@ -5,13 +5,16 @@ body, h1, h2, p {
 }
 
 /* Body styles */
-body {
+html, body {
     font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
     text-align: left;
     margin: 5px;
     padding: 0;
     background: #D4EDDA;
     color: black;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Header styles */
@@ -23,6 +26,12 @@ header {
     justify-content: space-between;  /* Space between left and right items */
     align-items: center;
 }
+
+.container {
+    flex: 1;
+    padding:20px;
+}
+
 
 /* User info - aligned to the top-right corner */
 .user-info {

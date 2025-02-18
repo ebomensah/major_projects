@@ -1,22 +1,26 @@
 {% extends 'base.html' %}
-
+{% block title %}Notifications{% endblock %}
 {% block content %}
-    <h2>Notifications</h2>
-    {% if message %}
-        <p>{{ message }}</p>  <!-- Display the message if no notifications -->
-    {% else %}
-        <ul>
-            {% for notification in notifications %}
-                <li>
-                    {% if not notification.is_read %}
-                        <span class="unread">{{ notification.message }}</span>
-                    {% else %}
-                        {{ notification.message }}
-                    {% endif %}
-                </li>
-            {% empty %}
-                <li>No notifications available</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
+
+    <div class="container">
+        <h2>Notification</h2>
+        {% if message %}
+            <p>{{ message }}</p>  <!-- Display the message if no notifications -->
+        {% else %}
+            <ul>
+                {% for notification in notifications %}
+                    <li>
+                        {% if not notification.read_status %}
+                            <span class="unread">{{ notification.message }}</span>
+                        {% else %}
+                            <a href="{% url 'notification-detail' notification.id %}">{{ notification.message }}</a>
+                        {% endif %}
+                    </li>
+                {% empty %}
+                    <li>No notifications available</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        </div>
 {% endblock %}
+

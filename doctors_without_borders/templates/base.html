@@ -5,43 +5,51 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Doctors Without Borders {% endblock %}</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
 <body>
     <header class="head">
-       
-    {% if user.is_authenticated %}
         <nav>
             <div class="hamburger-menu" onclick="toggleMenu()">☰</div>
-            <ul class="nav-list">
-                <li><a href="{% url 'home' %}">Home</a></li>
-                <li><a href="{% url 'appointments_list' %}">Appointments</a></li>
-                <li><a href="{% url 'notifications-list' %}"> Notifications</a></li>
-                {% if user.role == 'doctor' %}
-                <li><a href="{% url 'consultations_list' %}">Consultations</a></li>
-                    <!-- {% if appointment %}
-                        <li><a href="{% url 'create-consultation' appointment.id %}">Create Consultation</a></li>
-                    {% else %}
-                        <span> No appointment available</span>
-                    {% endif %} -->
-                {% endif %}
+            <ul class="nav-list" id="nav-list">
+                {% if user.is_authenticated %}
+                    {% if user.role == 'doctor' %}
+                        <li><a href="{% url 'doctor_dashboard' %}">Home</a></li>
+                    {% elif user.role == 'patient' %}
+                        <li><a href="{% url 'patient_dashboard' %}">Home</a></li>
+                    {% elif user.role == 'pharmacist' %}
+                        <li><a href="{% url 'pharmacist_dashboard' %}">Home</a></li>
+                    {% elif user.role == 'admin' %}
+                        <li><a href="{% url 'admin_dashboard' %}">Home</a></li>
+                    {% endif %}
 
-        {% else %}
-        <div class="not-authenticated">
-                <!-- <span><a href="{% url 'login' %}">Login</a></span>
-                <span><a href="{% url 'register' %}">Register</a></span> -->
-        </div>
-        {% endif %}
+                    {% if user.role == 'patient' or user.role == 'admin' %}
+                        <li><a href="{% url 'appointments_list' %}">Appointments</a></li>
+                    {% endif %}
 
-            </ul>
+                    {% if user.role == 'doctor' or user.role == 'admin' %}
+                    <li><a href="{% url 'consultations_list' %}">Consultations</a></li>
+                    {% endif %}
+                    <li><a href="{% url 'notifications-list' %}"> Notifications</a></li>
+                </ul>
+            {% else %}
+                <div class="not-authenticated">
+                </div>
+            {% endif %}
         </nav>   
+        {% if user.is_authenticated %}
         <div class="user-info">
             <p> Hello, {{user.first_name}} </p>
             <a href="{% url 'profile_update' %}"><img id="profile-picture" src="{{user.profile.profile_picture.url}}" alt="Profile Picture"></img></a><br>
-            <a href="{% url 'logout' %}"> Logout</a>
-
-        </div>    
+            <form action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <button type="submit">Logout</button>
+            </form>
+        </div>      
+        {% endif %}  
     </header>
+
 
     <div class="container">
         {% block content %} {% endblock %}
@@ -52,24 +60,7 @@
         <p> Contact us at <a href="mailto: email@dwb.com">email@dwb.com</a></p>
     </footer>
 
-    <script>
-        document.getElementById("logout-btn")?.addEventListener("click", function() {
-            fetch("/api/auth/logout/", { method: "POST" })
-            .then(response => response.json())
-            .then(data => {
-                alert("Logged out successfully!");
-                window.location.href = "/login";
-            })
-            .catch(error => console.error("Error:", error));
-        });
-    </script>
-
-<script>
-    function toggleMenu() {
-        const navMenu = document.querySelector("nav");
-        navMenu.classList.toggle("active");
-    }
-</script>
+    <script src="{% static 'js/scripts.js' %}"></script>
 
 </body>
 </html>

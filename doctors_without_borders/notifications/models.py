@@ -8,6 +8,7 @@ class Notification(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Notification for {self.recipient.title} {self.recipient.first_name} {self.recipient.last_name} - {self.message[:30]}; Read: {self.read_status}"
+        return f"Notification for {self.recipient}"
+        # {self.recipient.first_name} {self.recipient.last_name} - {self.message[:30]}; Read: {self.read_status}"
     
 

@@ -159,3 +159,5 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',  # Requires authentication
     ],
 }
+
+LOGIN_URL = "/login/"

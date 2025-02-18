@@ -10,46 +10,142 @@ from rest_framework.decorators import action
 from .models import CustomUser, Profile
 from .serializers import CustomUserSerializer, ProfileSerializer, UserUpdateSerializer, LoginSerializer
 from django.views.generic import TemplateView, View, UpdateView
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.middleware.csrf import get_token
 from rest_framework import serializers 
 from django.contrib.auth.views import LogoutView, LoginView
 from .forms import CustomUserCreationForm, UserUpdateForm, ProfileUpdateForm
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from django.contrib.auth import get_user_model
 
 
+def user_is_doctor(user):
+    return user.role == 'doctor'
 
-class ProfileUpdateView(UpdateView):
-    model = Profile
-    form_class = ProfileUpdateForm
-    template_name = 'registration/profile_update.html'
-    success_url = reverse_lazy('home')
+def user_is_patient(user):
+    return user.role == 'patient'
 
-    def get_object(self):
-        return self.request.user.profile  # Fetch the profile of the logged-in user
+def user_is_pharmacist(user):
+    return user.role == 'pharmacist'
 
-    def form_valid(self, form):
-        messages.success(self.request, 'Your profile has been updated successfully!')
-        return super().form_valid(form)
-        
+def user_is_admin(user):
+    return user.role == 'admin'
 
 
 class CustomLoginView(LoginView):
     template_name = 'registration/login.html'
 
-    def get_success_url(self):
-        return reverse('home')
-    
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
+    def form_valid(self, form):
+        user = form.get_user()
+        login(self.request, user)
 
-@method_decorator(csrf_exempt, name='dispatch')
-class CustomLogoutView(LogoutView):
+        if user.role == 'doctor':
+            return redirect(reverse_lazy('doctor_dashboard'))
+        
+        elif user.role == 'patient':
+            return redirect(reverse_lazy('patient_dashboard'))
+        
+        elif user.role == 'pharmacist':
+            return redirect(reverse_lazy('pharmacist_dashboard'))
+        
+        elif user.role == 'admin':
+            return redirect(reverse_lazy('admin_dashboard'))
+
+        return redirect('default_dashboard') 
+    
+    def form_invalid(self, form):
+        """Show error messages if login fails"""
+        messages.error(self.request, "Invalid username or password.")
+        return self.render_to_response(self.get_context_data(form=form))
+    
+
+
+class DoctorDashboardView(LoginRequiredMixin, TemplateView):
+    template_name = 'registration/doctor_dashboard.html'
+
     def dispatch(self, request, *args, **kwargs):
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':  # Check if AJAX
-            self.logout(request)
-            return JsonResponse({"message": "Logged out"}, status=200)  # Return JSON for AJAX
-        return redirect ('login')
+        if not user_is_doctor(request.user) or not request.user.is_authenticated:
+            return redirect('login')
+        return super().dispatch(request, args, **kwargs)
+    
+
+class DefaultDashboardView(LoginRequiredMixin, TemplateView):
+    template_name = 'registration/default_dashboard.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        if not (user_is_admin(request.user) or user_is_doctor(request.user) or user_is_patient(request.user) or user_is_pharmacist(request.user)):
+            return redirect('login')
+        return super().dispatch(request, *args, **kwargs)
+
+class PatientDashboardView(LoginRequiredMixin, TemplateView):
+    template_name = 'registration/patient_dashboard.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        if not user_is_patient(request.user) or not request.user.is_authenticated:
+            return redirect('login')
+        return super().dispatch(request, *args, **kwargs)
+
+class PharmacistDashboardView(LoginRequiredMixin, TemplateView):
+    template_name = 'registration/pharmacist_dashboard.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        if not user_is_pharmacist(request.user) or not request.user.is_authenticated:
+            return redirect('login')
+        return super().dispatch(request, *args, **kwargs)
+
+class AdminDashboardView(LoginRequiredMixin, TemplateView):
+    template_name = 'registration/admin_dashboard.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        if not user_is_admin(request.user) or not request.user.is_authenticated:
+            return redirect('login')
+        return super().dispatch(request, *args, **kwargs)
+
+
+
+class ProfileUpdateView(LoginRequiredMixin, UpdateView):
+    model = Profile
+    form_class = ProfileUpdateForm
+    template_name = 'registration/profile_update.html'
+
+    def get_object(self):
+        return self.request.user.profile  # Assuming a OneToOne relation with User
+
+    def form_valid(self, form):
+        messages.success(self.request, "Your profile has been updated successfully!")
+        return super().form_valid(form)
+        
+    def get_success_url(self):    
+        user = self.request.user
+        if user.role == 'doctor':
+            return reverse_lazy ('doctor_dashboard')
+        elif user.role == 'patient':
+            return reverse_lazy('patient_dashboard')
+        elif user.role == 'pharmacist':
+            return reverse_lazy('pharmacist_dashboard')
+        elif user.role == 'admin':
+            return reverse_lazy ('admin_dashboard')
+        
+        return reverse_lazy ('default_dashboard')
+        
+
+class CustomLogoutView(LogoutView):
+    def post(self, request, *args, **kwargs):
+        logout(request)
+        return JsonResponse({'redirect_url': reverse('login')})  # Adjust the redirect URL as needed
+
+    
+
+
+# @method_decorator(csrf_exempt, name='dispatch')
+# class CustomLogoutView(LogoutView):
+#     def dispatch(self, request, *args, **kwargs):
+#         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':  # Check if AJAX
+#             self.logout(request)
+#             return JsonResponse({"message": "Logged out"}, status=200)  # Return JSON for AJAX
+#         return redirect ('login')
 
 class CustomRegisterView(View):
     def get(self, request):
@@ -146,8 +242,6 @@ class HomeView(TemplateView):
             return redirect('login')
         return super().dispatch(request, *args, **kwargs)
 
-def csrf_token_view(request):
-    return JsonResponse({"csrfToken": get_token(request)})
 
 
 
