@@ -1,14 +1,30 @@
-# Ignore virtual environment
+# Ignore virtual environments
 venv/
 ../venv/
 .env
+
+# Ignore Python compiled files and bytecode
 *.pyc
 __pycache__/
+
+# Ignore SQLite database file
 db.sqlite3
+
+# Ignore media files (like uploaded files in Django)
 media/
+
+# macOS specific
 .DS_Store
+
+# Ignore log files
 *.log
+
+# Swap files
 *.swp
+
+# IDE directories
 .idea/
 .vscode/
+
+# Node.js modules
 node_modules/
