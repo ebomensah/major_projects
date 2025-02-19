@@ -1,0 +1,13 @@
+# Ignore virtual environment
+venv/
+.env
+*.pyc
+__pycache__/
+db.sqlite3
+media/
+.DS_Store
+*.log
+*.swp
+.idea/
+.vscode/
+node_modules/
