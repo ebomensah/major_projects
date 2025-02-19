@@ -1,23 +1,25 @@
 {% extends 'base.html' %}
-
+{% block title %}Login Form{% endblock %}
 {% block content %}
 
-    
-<div class="form-container">
-    <h2>Register</h2>
-    <form method="POST">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Register</button>
-    </form>
-</div>
+<div class="container">
+    <div class="form-container">
+        <h2>Register</h2>
+        <form method="POST">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Register</button>
+            <br>
+            <span> Have an account? <a href="{% url 'login' %}"> Login</a></span>
+        </form>
+    </div>
 
-    {% if form.errors %}
-        <div class="error">
-            <p>Please correct the following errors:</p>
-            <ul>
-                {% for field in form %}
-                    {% for error in field.errors %}
+        {% if form.errors %}
+            <div class="error">
+                <p>Please correct the following errors:</p>
+                <ul>
+                    {% for field in form %}
+                        {% for error in field.errors %}
                         <li>{{ error }}</li>
                     {% endfor %}
                 {% endfor %}
@@ -27,30 +29,6 @@
             </ul>
         </div>
     {% endif %}
+</div>
 
-    <script>
-        document.getElementById("register-form").addEventListener("submit", function(event) {
-            event.preventDefault();
-        
-            let username = document.getElementById("reg-username").value;
-            let email = document.getElementById("reg-email").value;
-            let password = document.getElementById("reg-password").value;
-        
-            fetch("/api/auth/register/", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username: username, email: email, password: password })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.message) {
-                    alert("Registration successful!");
-                    window.location.href = "/login";
-                } else {
-                    alert("Error registering: " + JSON.stringify(data));
-                }
-            })
-            .catch(error => console.error("Error:", error));
-        });
-        </script>
-        {% endblock %}
+{% endblock %}

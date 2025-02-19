@@ -19,12 +19,11 @@ class CustomUser(AbstractUser):
             ('patient', 'Patient'),
             ('doctor', 'Doctor'),
             ('admin', 'Admin'),
+            ('pharmacist', 'Pharmacist'),
     ]
     role = models.CharField (max_length= 50, choices = ROLE_CHOICES, default= 'patient')
     age = models.PositiveIntegerField(default = '18')
     phone_number = PhoneNumberField(blank=True, null=True, unique=True)
-    
-   
     
     def __str__(self):
         return f"{self.title} {self.first_name} {self.last_name}" 
@@ -38,5 +37,3 @@ class Profile (models.Model):
         return f"{self.user.username}'s Profile"
 
 
-
-# Create your models here.

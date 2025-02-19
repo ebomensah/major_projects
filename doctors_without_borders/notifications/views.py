@@ -33,10 +33,11 @@ class NotificationListView(ListView):
     context_object_name = 'notifications'
 
     def get_queryset(self):
-        return Notification.objects.filter(user=self.request.user)  # Filter by logged-in user
+        return Notification.objects.filter(recipient=self.request.user)  # Filter by logged-in user
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context["recipient"]=self.request.user
         if not context['notifications']:
             context['message'] = 'You have no notifications'  # Add a message if no notifications
         return context
@@ -45,12 +46,10 @@ class NotificationListView(ListView):
 
 
 def mark_notification_read(request, notification_id):
-    # Ensure the notification belongs to the logged-in user
-    notification = get_object_or_404(Notification, id=notification_id, user=request.user)
-    notification.read = True
+    notification = get_object_or_404(Notification, id=notification_id, recipient=request.user)
+    notification.read_status = True
     notification.save()
 
-    # Return a JSON response to indicate success
     return JsonResponse({"status": "success"})
 
 
@@ -61,7 +60,7 @@ class NotificationDetailView(LoginRequiredMixin, DetailView):
 
     def get_object(self):
         notification = super().get_object()
-        if not notification.is_read:
-            notification.is_read = True
+        if not notification.read_status:
+            notification.read_status = True
             notification.save()
         return notification
