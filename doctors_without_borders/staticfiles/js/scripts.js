@@ -6,8 +6,8 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 
 function toggleMenu() {
-        const navMenu = document.querySelector(".nav-list");
-        navMenu.classList.toggle("active");
+    const navMenu = document.querySelector(".nav-list");
+    navMenu.classList.toggle("active");
 }
 
 

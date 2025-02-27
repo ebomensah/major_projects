@@ -29,9 +29,8 @@ header {
 
 .container {
     flex: 1;
-    padding:20px;
+    padding: 20px;
 }
-
 
 /* User info - aligned to the top-right corner */
 .user-info {
@@ -77,79 +76,34 @@ nav ul li {
 nav ul li a {
     color: #ffffff;
     text-decoration: none;
+    padding: 10px 20px; /* Add padding for better click area */
 }
 
-/* Navigation links on small screens (hide initially) */
-@media (max-width: 768px) {
-    nav ul {
-        display: none;  /* Hide the navigation items by default */
-        flex-direction: column;  /* Stack links vertically */
-        align-items: flex-start;  /* Align the links to the left */
-        padding: 0;
-    }
+.hamburger-menu {
+    display: none; /* Hide by default */
+    cursor: pointer; /* Change cursor to pointer */
+    font-size: 24px; /* Adjust size as needed */
+}
 
-    /* Display menu when 'active' class is added */
-    nav.active ul {
-        display: flex;
-    }
+/* Show the navigation list in a row by default */
+.nav-list {
+    display: flex; 
+}
 
-    /* Hamburger icon styling */
+/* Media query for responsive design */
+@media (max-width: 650px) {
     .hamburger-menu {
-        display: block;
-        cursor: pointer;
-        font-size: 30px;
+        display: flex; /* Show hamburger icon on small screens */
     }
 
-    /* Style for active hamburger menu */
-    .hamburger-menu.active + ul {
-        display: flex;  /* Show the menu when hamburger is clicked */
+    .nav-list {
+        display: none; /* Hide menu items by default on small screens */
+        flex-direction: column; /* Stack items vertically */
     }
 
-    /* Add spacing between items when stacked vertically */
-    nav ul li {
-        margin-bottom: 10px;
+    .nav-list.active {
+        display: flex; /* Show menu items when active */
     }
-}
-
-/* Form and input styles */
-form {
-    margin-top: 20px;
-}
-
-form div {
-    margin-bottom: 15px;
-}
-
-form label {
-    display: block;
-    margin-bottom: 5px;
-}
-
-form input {
-    width: 50%;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-}
-
-.form-container {
-    background: white;
-    padding: 2rem;
-    border-radius: 10px;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-    width: 400px;
-    text-align: left;
-    margin: 0 auto;
-}
-
-.submit-btn {
-    background-color: #1565c0;
-    color: white;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    width: 100%;
 }
 
 /* Footer styles */
@@ -165,13 +119,4 @@ footer {
 
 footer a {
     color: white;
-}
-
-/* Hide navigation menu in mobile when not active */
-nav ul li a {
-    padding: 10px 20px;
-}
-
-nav ul li a:hover {
-    background-color: #333;
 }

@@ -1,4 +1,6 @@
 from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth.forms import PasswordResetForm
+from django.contrib.auth.views import PasswordResetView, PasswordResetConfirmView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.shortcuts import redirect, render
@@ -7,18 +9,31 @@ from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from .models import CustomUser, Profile
+from .models import CustomUser, Profile, PatientHistory
 from .serializers import CustomUserSerializer, ProfileSerializer, UserUpdateSerializer, LoginSerializer
 from django.views.generic import TemplateView, View, UpdateView
 from django.http import JsonResponse, HttpResponse
-from django.middleware.csrf import get_token
 from rest_framework import serializers 
 from django.contrib.auth.views import LogoutView, LoginView
-from .forms import CustomUserCreationForm, UserUpdateForm, ProfileUpdateForm
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
-from django.contrib.auth import get_user_model
+from .forms import CustomUserCreationForm, UserUpdateForm, ProfileUpdateForm, DoctorOnboardingForm, PatientOnboardingForm, PharmacistOnboardingForm
+from django.views import View
+from rest_framework.views import APIView
+from django.shortcuts import render
+
+
+class CustomPasswordResetView(PasswordResetView):
+    template_name = 'registration/password_reset.html'
+    success_url = reverse_lazy('password_reset_done')
+    email_template_name = 'registration/password_reset_email.html'
+    form_class = PasswordResetForm  # Default Django form for password reset
+
+def password_reset_done(request):
+    return render(request, 'registration/password_reset_done.html')
+
+class CustomPasswordResetConfirmView(PasswordResetConfirmView):
+    template_name = 'registration/password_reset_confirm.html'
+    success_url = reverse_lazy('password_reset_complete')
+
 
 
 def user_is_doctor(user):
@@ -61,6 +76,88 @@ class CustomLoginView(LoginView):
         return self.render_to_response(self.get_context_data(form=form))
     
 
+class OnboardingView(LoginRequiredMixin, View):
+    def get(self, request):
+        user = request.user
+        form = None  # Initialize form
+        gender = user.gender
+        age = user.age  # Age is directly in CustomUser 
+
+        if user.role == 'doctor':
+            form = DoctorOnboardingForm()
+        elif user.role == 'patient':
+            form = PatientOnboardingForm()
+        elif user.role == 'pharmacist':
+            form = PharmacistOnboardingForm()
+        else:
+            return redirect('home')
+        
+        show_prostate_screening = gender == 'M' and age > 40
+        show_cervical_screening = gender == 'F'
+        show_breast_screening = gender == 'F'
+
+        print(f"Gender: {gender}, Age: {age}, Show Prostate: {show_prostate_screening}, Show Cervical: {show_cervical_screening}, Show Breast: {show_breast_screening}")
+
+        return render(request, 'registration/onboarding.html', {
+            'form': form,
+            'gender': gender,
+            'age': age,
+            'show_prostate_screening': show_prostate_screening,
+            'show_cervical_screening': show_cervical_screening,
+            'show_breast_screening': show_breast_screening
+        })
+
+    def post(self, request):
+        user = request.user
+
+        if user.role == 'doctor':
+            form = DoctorOnboardingForm(request.POST)
+        elif user.role == 'patient':
+            form = PatientOnboardingForm(request.POST)
+        elif user.role == 'pharmacist':
+            form = PharmacistOnboardingForm(request.POST)
+        else:
+            return redirect('home')
+
+        if form.is_valid():
+            profile = form.save(commit=False)
+            profile.user = user
+            
+            # If the user is a patient, save to PatientHistory
+            if user.role == 'patient':
+                patient_history = getattr(user, 'medical_history', None)
+                if patient_history:
+                    profile.user = user
+                    profile.save()  # Save PatientHistory
+                else:
+                    # Handle case where patient history does not exist
+                    # You might want to create a new PatientHistory instance here
+                    pass
+
+            profile.save()  # Save the form data
+
+            # Redirect based on role
+            return self.get_success_url(user)
+
+        # If the form is invalid, re-render the form with existing data
+        return render(request, 'registration/onboarding.html', {
+            'form': form,
+            'gender': request.POST.get('gender', ""),
+            'age': user.age
+        })
+
+    def get_success_url(self, user):
+        """Return the URL to redirect user to their respective dashboard after onboarding."""
+        if user.role == 'doctor':
+            return reverse_lazy('doctor_dashboard')
+        elif user.role == 'patient':
+            return reverse_lazy('patient_dashboard')
+        elif user.role == 'pharmacist':
+            return reverse_lazy('pharmacist_dashboard')
+        elif user.role == 'admin':
+            return reverse_lazy('admin_dashboard')
+        
+        return reverse_lazy('default_dashboard')  # Ensure all paths return a URL
 
 class DoctorDashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'registration/doctor_dashboard.html'
@@ -103,19 +200,21 @@ class AdminDashboardView(LoginRequiredMixin, TemplateView):
             return redirect('login')
         return super().dispatch(request, *args, **kwargs)
 
-
-
-class ProfileUpdateView(LoginRequiredMixin, UpdateView):
-    model = Profile
-    form_class = ProfileUpdateForm
-    template_name = 'registration/profile_update.html'
+    
+class UserUpdateView(LoginRequiredMixin, UpdateView):
+    model = CustomUser
+    form_class = UserUpdateForm
+    template_name = 'registration/user_update.html'
 
     def get_object(self):
-        return self.request.user.profile  # Assuming a OneToOne relation with User
+        return self.request.user  
 
     def form_valid(self, form):
+        form.save()
+
         messages.success(self.request, "Your profile has been updated successfully!")
         return super().form_valid(form)
+        
         
     def get_success_url(self):    
         user = self.request.user
@@ -137,27 +236,20 @@ class CustomLogoutView(LogoutView):
         return JsonResponse({'redirect_url': reverse('login')})  # Adjust the redirect URL as needed
 
     
-
-
-# @method_decorator(csrf_exempt, name='dispatch')
-# class CustomLogoutView(LogoutView):
-#     def dispatch(self, request, *args, **kwargs):
-#         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':  # Check if AJAX
-#             self.logout(request)
-#             return JsonResponse({"message": "Logged out"}, status=200)  # Return JSON for AJAX
-#         return redirect ('login')
-
 class CustomRegisterView(View):
     def get(self, request):
         form = CustomUserCreationForm()
         return render(request, 'registration/register.html', {'form': form})
 
     def post(self, request):
-        form = CustomUserCreationForm(request.POST)
+        form = CustomUserCreationForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
+            user = form.save()
+            # Log the user in after registration
+            login(request, user)
             messages.success(request, 'Your account has been created!')
-            return redirect('login')
+            return redirect(reverse_lazy('onboarding'))  # Redirect to the onboarding view
+
         return render(request, 'registration/register.html', {'form': form})
 
 
@@ -191,8 +283,8 @@ class ProfileViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         serializer.save(user=self.request.user)
 
-from rest_framework.views import APIView
-from rest_framework.authtoken.models import Token
+
+
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]

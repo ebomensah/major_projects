@@ -12,7 +12,7 @@
     {% if user.is_authenticated %}
         <div class="user-info">
             <p> Hello, {{user.first_name}} </p>
-            <img id="profile-picture" src="{{user.profile.profile_picture.url}}" alt="Profile Picture"></img><br>
+            <img id="profile-picture" src="{{user.profile_picture.url}}" alt="Profile Picture"></img><br>
             <button id = "logout-btn">Logout</button>
             <script>
                 document.getElementById("logout-btn")?.addEventListener("click", function() {

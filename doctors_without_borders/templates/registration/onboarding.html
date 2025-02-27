@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}Onboarding Form{% endblock %}
+{% block content %}
+
+<div class="container">
+    <div class="form-container">
+        <h1>Onboarding</h1>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+<!-- 
+            {% if show_prostate_screening %}
+            <div id="prostate-screening">
+                <label for="id_prostate_screening">Have you been screened for prostate disease?</label>
+                {{ form.prostate_screening }}
+            </div>
+            {% endif %}
+
+            {% if show_cervical_cancer_screening %}
+            <div id="cervical-cancer-screening">
+                <label for="id_cervical_cancer_screening">Have you been screened for lesions of the cervix?</label>
+                {{ form.cervical_cancer_screening }}
+            </div>
+            {% endif %}
+
+            {% if show_breast_cancer_screening %}
+            <div id="breast-cancer-screening">
+                <label for="id_breast_cancer_screening">Have you been screened for lesions of the breast?</label>
+                {{ form.breast_cancer_screening }}
+            </div>
+            {% endif %} -->
+
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+</div>
+
+<script>
+        const userData = {
+            gender: "{{ request.user.gender|default:'' }}".trim(),
+            age: parseInt("{{ request.user.age|default:'0' }}", 10)
+        };
+    
+        console.log("🚀 User Data Loaded:", userData); // Debugging output
+    
+        // Screening Logic
+        const prostateScreening = document.getElementById('prostate-screening');
+        const cervicalScreening = document.getElementById('cervical-cancer-screening');
+        const breastScreening = document.getElementById('breast-cancer-screening');
+    
+        // Show/Hide Logic
+        if (userData.gender === 'M' && userData.age > 40) {
+            if (prostateScreening) prostateScreening.style.display = 'block';
+        } else {
+            if (prostateScreening) prostateScreening.style.display = 'none';
+        }
+    
+        if (userData.gender === 'F') {
+            if (cervicalScreening) cervicalScreening.style.display = 'block';
+            if (breastScreening) breastScreening.style.display = 'block';
+        } else {
+              if (cervicalScreening) cervicalScreening.style.display = 'none';
+            if (breastScreening) breastScreening.style.display = 'none';
+        }
+</script>
+{% endblock %}

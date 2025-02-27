@@ -41,7 +41,13 @@
         {% if user.is_authenticated %}
         <div class="user-info">
             <p> Hello, {{user.first_name}} </p>
-            <a href="{% url 'profile_update' %}"><img id="profile-picture" src="{{user.profile.profile_picture.url}}" alt="Profile Picture"></img></a><br>
+            <a href="{% url 'profile_update' %}">
+                {% if user.profile_picture %}
+                    <img id="profile-picture" src="{{ user.profile_picture.url }}" alt="Profile Picture">
+                {% else %}
+                    <img id="profile-picture" src="{{ MEDIA_URL }}  profile_pics/default-profile_pciture.png" alt="Default Profile Picture">
+                {% endif %}
+            </a>
             <form action="{% url 'logout' %}" method="post">
                 {% csrf_token %}
                 <button type="submit">Logout</button>
@@ -61,6 +67,7 @@
     </footer>
 
     <script src="{% static 'js/scripts.js' %}"></script>
+    <script src="{% static 'js/onboarding.js' %}"></script>
 
 </body>
 </html>

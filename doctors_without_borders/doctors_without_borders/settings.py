@@ -141,6 +141,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
@@ -160,4 +161,15 @@ REST_FRAMEWORK = {
     ],
 }
 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # Use your email provider’s SMTP server
+EMAIL_PORT = 465
+EMAIL_USE_SSL = True
+EMAIL_HOST_USER = 'ernestmensah02@gmail.com'
+EMAIL_HOST_PASSWORD = 'tgkvajiwtejrgsgg'  # Use an App Password if using Gmail
+DEFAULT_FROM_EMAIL = 'ernestmensah02@gmail.com'
+
 LOGIN_URL = "/login/"
+LOGOUT_REDIRECT_URL = "/login/"
+
+

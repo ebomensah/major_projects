@@ -1,32 +1,6 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Doctors Without Borders {% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-</head>
-<body>
-    <header class="head">
-       
+{% extends "base.html" %}
 
-        <nav>
-            <ul class="nav-list">
-            </ul>
-        </nav>   
-        <div class="user-info">
-            <p> Hello, {{user.first_name}} </p>
-            <a href="{% url 'profile_update' %}"><img id="profile-picture" src="{{user.profile.profile_picture.url}}" alt="Profile Picture"></img></a><br>
-            <form action="{% url 'logout' %}" method="post">
-                {% csrf_token %}
-                <button type="submit">Logout</button>
-            </form>
-        </div>    
-    </header>
-
-
-
+{% block content %}
 <div class="form-container">
     <h2>Update Profile</h2>
     <form method="POST" enctype="multipart/form-data">
@@ -37,13 +11,4 @@
     </form>
 </div>
 
-
-<footer>
-    <p>&copy; 2025 Doctors Without Borders</p>
-    <p> Contact us at <a href="mailto: email@dwb.com">email@dwb.com</a></p>
-</footer>
-
-
-
-</body>
-</html>
+{% endblock %}
