@@ -1,59 +1,51 @@
-document.addEventListener("DOMContentLoaded", function() {
-    console.log("🚀 JavaScript Loaded!");
+document.addEventListener('DOMContentLoaded', function() {
+    // Function to show or hide follow-up question based on the selected value
+    function toggleFollowUp(questionId, detailsId) {
+        const question = document.getElementById(questionId);
+        const details = document.getElementById(detailsId);
 
-    function toggleField(choiceFieldId, targetFieldId) {
-        let choiceField = document.getElementById(choiceFieldId);
-        let targetField = document.getElementById(targetFieldId);
-
-        if (choiceField && targetField) {
-            function updateVisibility() {
-                targetField.style.display = (choiceField.value === 'Yes') ? 'block' : 'none';
+        // Check if question exists and has the correct answer
+        if (question && details) {
+            if (question.value === 'yes') {
+                details.style.display = 'block'; // Show the details if answer is "Yes"
+            } else {
+                details.style.display = 'none'; // Hide the details if answer is "No"
             }
-
-            choiceField.addEventListener('change', updateVisibility);
-            updateVisibility(); 
         }
     }
 
-    toggleField('id_allergies', 'id_allergies_detail');
-    toggleField('id_chronic_disease_status', 'id_chronic_disease_detail');
-    toggleField('id_smoking_status', 'id_smoking_detail');
-    toggleField('id_alcohol_status', 'id_alcohol_detail');
-
-    // ✅ Fetch gender & age from userData
-    const gender = userData.gender;
-    const age = userData.age;
-
-    console.log("🟢 Gender:", gender);
-    console.log("🟢 Age:", age);
-
-    // Screenings
-    const prostateScreening = document.getElementById('prostate-screening');
-    const cervicalScreening = document.getElementById('cervical-cancer-screening');
-    const breastScreening = document.getElementById('breast-cancer-screening');
-
-    console.log("🔍 Checking Screening Elements:", {
-        prostateScreening,
-        cervicalScreening,
-        breastScreening
-    });
-
-    // 🚨 Check if elements exist before modifying them
-    if (prostateScreening) {
-        prostateScreening.style.display = (gender === 'M' && age > 40) ? 'block' : 'none';
-    } else {
-        console.warn("⚠️ prostate-screening element not found!");
+    // Set up event listeners for each question (status questions)
+    const allergiesQuestion = document.getElementById('allergies');
+    if (allergiesQuestion) {
+        allergiesQuestion.addEventListener('change', function() {
+            toggleFollowUp('allergies', 'allergies-details');
+        });
     }
 
-    if (cervicalScreening) {
-        cervicalScreening.style.display = (gender === 'F') ? 'block' : 'none';
-    } else {
-        console.warn("⚠️ cervical-cancer-screening element not found!");
+    const chronicDiseaseQuestion = document.getElementById('chronic_disease');
+    if (chronicDiseaseQuestion) {
+        chronicDiseaseQuestion.addEventListener('change', function() {
+            toggleFollowUp('chronic_disease', 'chronic-disease-details');
+        });
     }
 
-    if (breastScreening) {
-        breastScreening.style.display = (gender === 'F') ? 'block' : 'none';
-    } else {
-        console.warn("⚠️ breast-cancer-screening element not found!");
+    const smokeQuestion = document.getElementById('smoke');
+    if (smokeQuestion) {
+        smokeQuestion.addEventListener('change', function() {
+            toggleFollowUp('smoke', 'smoke-details');
+        });
     }
+
+    const alcoholQuestion = document.getElementById('alcohol');
+    if (alcoholQuestion) {
+        alcoholQuestion.addEventListener('change', function() {
+            toggleFollowUp('alcohol', 'alcohol-details');
+        });
+    }
+
+    // Initial check to make sure any previously selected options are respected
+    toggleFollowUp('allergies', 'allergies-details');
+    toggleFollowUp('chronic_disease', 'chronic-disease-details');
+    toggleFollowUp('smoke', 'smoke-details');
+    toggleFollowUp('alcohol', 'alcohol-details');
 });

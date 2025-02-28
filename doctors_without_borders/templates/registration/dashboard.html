@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Welcome to your dashboard</h2>
+
+<!-- Common Section for All Users -->
+<div>
+    <h3>Home</h3>
+    <p>Your latest updates and notifications appear here.</p>
+</div>
+
+<!-- Doctor's Section -->
+{% if role == "doctor" %}
+<div>
+    <h3>Consultations</h3>
+    <p>View and manage your consultations.</p>
+</div>
+{% endif %}
+
+<!-- Patient's Section -->
+{% if role == "patient" %}
+<div>
+    <h3>Appointments</h3>
+    <p>View and schedule appointments.</p>
+</div>
+{% endif %}
+
+<!-- Pharmacist's Section -->
+{% if role == "pharmacist" %}
+<div>
+    <h3>Prescriptions</h3>
+    <p>Manage prescriptions from doctors.</p>
+</div>
+{% endif %}
+
+{% endblock %}

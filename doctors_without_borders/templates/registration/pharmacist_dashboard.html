@@ -1,11 +1,18 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}Pharmacists Dashboard{% endblock %}
 {% block content %}
 
-
-    <div class="container">
+<!-- 
+    <div class="container"> -->
         <h2>Welcome to the Pharmacists Dashboard</h2>
-        <h4>What would you like to do today?</h4>
-    </div>
+        <ul id="pharmacist-prescriptions">
 
+        </ul>
+    <!-- </div> -->
+
+{% endblock %}
+
+{% block extra_scripts %}
+    <script defer src="{% static 'js/pharmacist_dashboard.js' %}"></script>
 {% endblock %}

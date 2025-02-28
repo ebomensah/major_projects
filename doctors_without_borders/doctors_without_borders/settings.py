@@ -71,6 +71,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.media',
             ],
         },
     },
@@ -157,7 +158,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.BasicAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',  # Requires authentication
+        'rest_framework.permissions.AllowAny',  # Requires authentication
     ],
 }
 
@@ -171,5 +172,6 @@ DEFAULT_FROM_EMAIL = 'ernestmensah02@gmail.com'
 
 LOGIN_URL = "/login/"
 LOGOUT_REDIRECT_URL = "/login/"
+LOGIN_REDIRECT_URL = "/"
 
 

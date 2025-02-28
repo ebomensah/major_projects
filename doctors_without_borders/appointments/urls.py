@@ -4,7 +4,8 @@ from .views import AppointmentViewSet, ConsultationViewSet
 from .views import AppointmentListView, ConsultationListView, BookAppointmentView, ConsultationCreateView
 from .views import (
     AppointmentDetailView, AppointmentUpdateView, AppointmentDeleteView,
-    ConsultationDetailView, ConsultationUpdateView, ConsultationDeleteView
+    ConsultationDetailView, ConsultationUpdateView, ConsultationDeleteView,
+    PharmacistPrescriptionListView, MarkPrescriptionAsServedView, get_prescriptions
 )
 
 
@@ -24,4 +25,7 @@ urlpatterns =[
     path('consultations/<int:pk>/', ConsultationDetailView.as_view(), name='consultation-detail'),
     path('consultations/<int:pk>/update/', ConsultationUpdateView.as_view(), name='consultation-update'),
     path('consultations/<int:pk>/delete/', ConsultationDeleteView.as_view(), name='consultation-delete'),
+    path('pharmacist/prescriptions/', PharmacistPrescriptionListView.as_view(), name='pharmacist-prescriptions'),
+    path('pharmacist/prescriptions/<int:pk>/serve/', MarkPrescriptionAsServedView.as_view(), name='mark-prescription-served'),
+    path('api/pharmacist/prescriptions/', get_prescriptions, name='get_prescriptions'),
 ]

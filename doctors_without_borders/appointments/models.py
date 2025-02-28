@@ -34,6 +34,7 @@ class Consultation (models.Model):
     investigations = models.TextField(blank=True)
     treatment_plan = models.TextField(blank=False)
     prescriptions = models.TextField(blank=True)
+    prescription_served = models.BooleanField(default=False)
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='awaiting_review')
     review_date = models.DateField(blank=True, null=True)
     appointment = models.ForeignKey(Appointment, on_delete=models.CASCADE, related_name= 'consultation')

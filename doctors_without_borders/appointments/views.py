@@ -4,18 +4,72 @@ from .serializers import AppointmentSerializer, ConsultationSerializer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import viewsets, status 
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.generics import ListAPIView, UpdateAPIView
+from rest_framework.response import Response
 from django.db.models import Q
 from rest_framework.response import Response
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import ListView, DetailView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.urls import reverse_lazy
 from django.views.generic.edit import CreateView
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from .forms import AppointmentForm, ConsultationForm
 from django.contrib import messages
+
+
+
+def get_prescriptions(request):
+    prescriptions = Consultation.objects.exclude(prescriptions="")
+
+    # Create a list of prescriptions to send as JSON
+    data = [
+        {
+            "patient": f"{c.appointment.patient.first_name} {c.appointment.patient.last_name}",
+            "doctor": f"Dr. {c.appointment.doctor.first_name} {c.appointment.doctor.last_name}",
+            "prescriptions": c.prescriptions
+        }
+        for c in prescriptions
+    ]
+
+    # Ensure that we are sending prescriptions as an empty list if none found
+    if not data:
+        data = []
+
+    return JsonResponse({"prescriptions": data})
+
+class PharmacistPrescriptionListView(LoginRequiredMixin, ListView):
+    model= Consultation
+    template_name= 'appointments/pharmacist_prescriptions.html'
+    context_object_name = 'prescriptions'
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.role == 'pharmacist':
+            return Consultation.objects.filter(status="completed", prescriptions__isnull=False, prescriptions__gt="", prescription_served=False)
+        return Consultation.objects.none()
+
+
+class MarkPrescriptionAsServedView(UpdateAPIView):
+    serializer_class = ConsultationSerializer
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, *args, **kwargs):
+        user = request.user
+        if user.role != 'pharmacist':
+            return Response({"error": "Unauthorized"}, status=status.HTTP_403_FORBIDDEN)
+
+        try:
+            consultation = Consultation.objects.get(id=kwargs['pk'])
+            consultation.prescription_served = True
+            consultation.save()
+            return Response({"message": "Prescription marked as served."}, status=status.HTTP_200_OK)
+        except Consultation.DoesNotExist:
+            return Response({"error": "Consultation not found"}, status=status.HTTP_404_NOT_FOUND)
+
 
 
 @method_decorator(login_required, name='dispatch')
@@ -87,10 +141,11 @@ class ConsultationDetailView(LoginRequiredMixin, DetailView):
     template_name = 'appointments/consultation_detail.html'
     context_object_name = 'consultation'
 
-class ConsultationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+class ConsultationUpdateView(UpdateView):
     model = Consultation
     form_class = ConsultationForm
     template_name = 'appointments/consultation_form.html'
+    success_url = reverse_lazy('consultations_list')
 
     def test_func(self):
         consultation = self.get_object()

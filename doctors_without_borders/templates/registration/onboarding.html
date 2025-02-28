@@ -1,66 +1,140 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}Onboarding Form{% endblock %}
+
 {% block content %}
-
-<div class="container">
-    <div class="form-container">
-        <h1>Onboarding</h1>
-        <form method="post" enctype="multipart/form-data">
+    <div class="container">
+        <h2>Onboarding Form</h2><br>
+        <form id="onboarding-form">
             {% csrf_token %}
-            {{ form.as_p }}
-<!-- 
+            
+            <!-- Example: Allergies -->
+            <label for="allergies">Do you have any allergies?</label>
+            <select id="allergies" name="allergies">
+            <option value="no">No</option>
+            <option value="yes">Yes</option>
+            </select><br>
+
+            <!-- Follow-up question for allergies -->
+            <div id="allergies-details" class="follow-up-question" style="display: none;">
+            <label for="allergy-details">List those allergies here:</label>
+            <textarea id="allergy_details" name="allergy_details"></textarea>
+            </div><br>
+
+            <!-- Example: Chronic Disease -->
+            <label for="chronic_disease">Do you have any chronic disease?</label>
+            <select id="chronic_disease" name="chronic_disease">
+            <option value="no">No</option>
+            <option value="yes">Yes</option>
+            </select><br>
+
+            <!-- Follow-up question for chronic disease -->
+            <div id="chronic-disease-details" class="follow-up-question" style="display: none;">
+            <label for="chronic-disease-details">Select any chronic diseases you have:</label>
+            <select>
+                <option value="Hypertension"> Hypertension</option>
+                <option value="Diabetes">Diabetes </option>
+                <option value="Chronic Kidney Disease"> Chronic Kidney Disease</option>
+                <option value="Asthma">Asthma</option>
+                <option value="Chronic Heart disease"> Congestive Heart Failure</option>
+                <option value="Hyperthyroidism"> Hyperthyroidism</option>
+                <option value="Hypothyroidism">Hypothyroidism</option>
+                <option value="Inflammatory Bowel Disease">Inflammatory Bowel Disease</option>
+                <option value="Arthritis">Arthritis </option>
+            </select>
+            </div><br>
+
+            <!-- Example: Smoking -->
+            <label for="smoke">Do you smoke?</label>
+            <select id="smoke" name="smoke">
+            <option value="no">No</option>
+            <option value="yes">Yes</option>
+            </select><br>
+
+            <!-- Follow-up question for smoking -->
+            <div id="smoke-details" class="follow-up-question" style="display: none;">
+            <label for="smoke-details">If yes, how often do you smoke and how many packs do you take in a day?</label>
+            <textarea id="smoke-details" name="smoke_details"></textarea>
+            </div><br>
+
+            <!-- Alcohol-->
+            <label for="alcohol"> Do you take alochol?</label>
+            <select id="alcohol" name="alcohol">
+            <option value="no">No</option>
+            <option value="yes">Yes</option>
+            </select><br>
+
+            <div id="alcohol-details" class="follow-up-question" style="display:none;">
+                <label for="alcohol_details">How often do you take alcohol?</label>
+                <input type="text" id="alcohol_frequency" name="alcohol_frequency">
+            </div><br>
+
+
+
+            <!--Blood Group-->
+            <label for="blood_group"> Blood Group</label>
+            <select id="blood_group" name="blood_group">
+            <option value="O+">O+</option>
+            <option value="O-">O-</option>
+            <option value="A+">A+</option>
+            <option value="A-">A-</option>
+            <option value="B+">B+</option>
+            <option value="B-">B-</option>
+            <option value="AB+">AB+</option>
+            <option value="AB-">AB-</option>
+            <option value="Unknown">Unknown</option>
+            </select><br><br>
+
+
+            <!--Genotype-->
+            <label for="genotype"> Genotype </label>
+            <select id="genotype" name="genotype">
+            <option value="AA">AA</option>
+            <option value="AS">AS-</option>
+            <option value="AC">AC</option>
+            <option value="SC">SC</option>
+            <option value="CC">CC</option>
+            <option value="SS">SS</option>
+            <option value="Other">Other</option>
+            </select><br><br>
+
+
+            <!-- Screening Based on Gender and Age -->
             {% if show_prostate_screening %}
-            <div id="prostate-screening">
-                <label for="id_prostate_screening">Have you been screened for prostate disease?</label>
-                {{ form.prostate_screening }}
-            </div>
+            <label for="prostate_screening">Have you been screened for prostate disease?</label>
+            <select id="prostate_screening" name="prostate_screening">
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+            </select><br>
             {% endif %}
+        
+        <!-- Cervical Screening Section (Visible if Female) -->
+        {% if show_cervical_screening %}
+            <label for="cervical_screening">Have you been screened for lesions of the cervix?</label>
+            <select id="cervical_screening" name="cervical_screening">
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+            </select><br>
+        {% endif %}
+        
+        <!-- Breast Screening Section (Visible if Female) -->
+        {% if show_breast_screening %}
+            <label for="breast_screening">Have you been screened for lesions of the breast?</label>
+            <select id="breast_screening" name="breast_screening">
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+            </select><br>
+        {% endif %}
+            
 
-            {% if show_cervical_cancer_screening %}
-            <div id="cervical-cancer-screening">
-                <label for="id_cervical_cancer_screening">Have you been screened for lesions of the cervix?</label>
-                {{ form.cervical_cancer_screening }}
-            </div>
-            {% endif %}
-
-            {% if show_breast_cancer_screening %}
-            <div id="breast-cancer-screening">
-                <label for="id_breast_cancer_screening">Have you been screened for lesions of the breast?</label>
-                {{ form.breast_cancer_screening }}
-            </div>
-            {% endif %} -->
+            <label for="labs">Have you done any recent labs? Kindly upload the results here:</label>
+            <input type="file" id="labs" name="labs"><br><br>
 
             <button type="submit">Submit</button>
         </form>
     </div>
-</div>
+{% endblock %}
 
-<script>
-        const userData = {
-            gender: "{{ request.user.gender|default:'' }}".trim(),
-            age: parseInt("{{ request.user.age|default:'0' }}", 10)
-        };
-    
-        console.log("🚀 User Data Loaded:", userData); // Debugging output
-    
-        // Screening Logic
-        const prostateScreening = document.getElementById('prostate-screening');
-        const cervicalScreening = document.getElementById('cervical-cancer-screening');
-        const breastScreening = document.getElementById('breast-cancer-screening');
-    
-        // Show/Hide Logic
-        if (userData.gender === 'M' && userData.age > 40) {
-            if (prostateScreening) prostateScreening.style.display = 'block';
-        } else {
-            if (prostateScreening) prostateScreening.style.display = 'none';
-        }
-    
-        if (userData.gender === 'F') {
-            if (cervicalScreening) cervicalScreening.style.display = 'block';
-            if (breastScreening) breastScreening.style.display = 'block';
-        } else {
-              if (cervicalScreening) cervicalScreening.style.display = 'none';
-            if (breastScreening) breastScreening.style.display = 'none';
-        }
-</script>
+{% block extra_scripts %}
+    <script defer src="{% static 'js/onboarding.js' %}"></script>
 {% endblock %}

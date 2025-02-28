@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4 text-center">Prescriptions</h1>
+
+    {% if prescriptions %}
+        <div class="table-responsive">
+            <table class="table table-hover table-striped table-bordered">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Patient</th>
+                        <th>Doctor</th>
+                        <th>Prescription</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for prescription in prescriptions %}
+                        <tr>
+                            <td>{{ prescription.appointment.patient.first_name }} {{ prescription.appointment.patient.last_name }}</td>
+                            <td>Dr. {{ prescription.appointment.doctor.first_name }} {{ prescription.appointment.doctor.last_name }}</td>
+                            <td>
+                                {% if prescription.prescriptions %}
+                                    <ul>
+                                        {% for item in prescription.prescriptions.splitlines %}
+                                            <li>{{ item }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    <p>No prescriptions available.</p>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if prescription.prescription_served %}
+                                    <span class="badge badge-success">Served</span>
+                                {% else %}
+                                    <span class="badge badge-warning">Not Served</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if not prescription.prescription_served %}
+                                    <form action="{% url 'mark-prescription-served' pk=prescription.pk %}" method="post" class="d-inline"> 
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-success btn-sm">
+                                            <i class="fas fa-check-circle"></i>Mark as Served
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <button class="btn btn-secondary btn-sm" disabled>
+                                        <i class="fas fa-check-circle"></i>Already Served</button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="alert alert-info">No prescriptions found.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

@@ -14,10 +14,12 @@ class AppointmentSerializer(serializers.ModelSerializer):
 
 class ConsultationSerializer(serializers.ModelSerializer):
     appointment = serializers.PrimaryKeyRelatedField(queryset=Appointment.objects.none())  # Default to no appointments
+    doctor_name = serializers.CharField(source='appointment.doctor.username', read_only=True)
+    patient_name = serializers.CharField(source='appointment.patient.username', read_only=True)
 
     class Meta:
         model = Consultation
-        fields = ['appointment', 'history', 'examination_findings', 'investigations', 'treatment_plan', 'prescriptions', 'status', 'review_date']
+        fields = ['id', 'doctor_name', 'patient_name','appointment', 'history', 'examination_findings', 'investigations', 'treatment_plan', 'prescriptions', 'status', 'review_date']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

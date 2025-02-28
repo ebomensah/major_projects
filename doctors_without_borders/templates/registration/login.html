@@ -1,19 +1,25 @@
 {% extends 'base.html' %}
-{% block title %}Login Form{% endblock %}
-{% block content %}
+{% load static %}
 
-<div class="container">
-    <div class="form-container">
-            <h2>Login</h2>
-            <form method="post">
-                {% csrf_token %}
-                {{ form.as_p }}
-                <button type="submit">Login</button>
-                <br>
-                <span> Don't have an account?<a href="{% url 'register' %}">Create One </a></span><br>
-                <span> Forgot password?<a href="{% url 'password_reset' %}">Reset</a></span>
-            </form>
+{% block title %}Login{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h2>Login</h2><br>
+        <form id="login-form" method="POST">
+            {% csrf_token %}
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required><br><br>
+            
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required><br><br>
+            
+            <button type="submit">Login</button>
+            <span> Don't have an account? <a href="{% url 'register' %}"> Register</a></span>
+        </form>
     </div>
-</div>
-        
+{% endblock %}
+
+{% block extra_scripts %}
+    <script defer src="{% static 'js/login.js' %}"></script>
 {% endblock %}

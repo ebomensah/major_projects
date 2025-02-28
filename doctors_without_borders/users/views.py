@@ -10,7 +10,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from .models import CustomUser, Profile, PatientHistory
-from .serializers import CustomUserSerializer, ProfileSerializer, UserUpdateSerializer, LoginSerializer
+from .serializers import CustomUserSerializer, ProfileSerializer, UserUpdateSerializer, LoginSerializer, CustomUserRegistrationSerializer
 from django.views.generic import TemplateView, View, UpdateView
 from django.http import JsonResponse, HttpResponse
 from rest_framework import serializers 
@@ -19,6 +19,7 @@ from .forms import CustomUserCreationForm, UserUpdateForm, ProfileUpdateForm, Do
 from django.views import View
 from rest_framework.views import APIView
 from django.shortcuts import render
+from django.views.generic.edit import CreateView
 
 
 class CustomPasswordResetView(PasswordResetView):
@@ -35,7 +36,6 @@ class CustomPasswordResetConfirmView(PasswordResetConfirmView):
     success_url = reverse_lazy('password_reset_complete')
 
 
-
 def user_is_doctor(user):
     return user.role == 'doctor'
 
@@ -50,38 +50,31 @@ def user_is_admin(user):
 
 
 class CustomLoginView(LoginView):
-    template_name = 'registration/login.html'
+    def post(self, request):
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+        user = authenticate(request, username=username, password=password)
 
-    def form_valid(self, form):
-        user = form.get_user()
-        login(self.request, user)
-
-        if user.role == 'doctor':
-            return redirect(reverse_lazy('doctor_dashboard'))
+        if user:
+            login(request, user)
+            return redirect("dashboard")
+        return render(request, "login.html", {"error": "Invalid credentials"})
         
-        elif user.role == 'patient':
-            return redirect(reverse_lazy('patient_dashboard'))
-        
-        elif user.role == 'pharmacist':
-            return redirect(reverse_lazy('pharmacist_dashboard'))
-        
-        elif user.role == 'admin':
-            return redirect(reverse_lazy('admin_dashboard'))
 
-        return redirect('default_dashboard') 
-    
-    def form_invalid(self, form):
-        """Show error messages if login fails"""
-        messages.error(self.request, "Invalid username or password.")
-        return self.render_to_response(self.get_context_data(form=form))
-    
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 
-class OnboardingView(LoginRequiredMixin, View):
+class OnboardingView(View):
+    @method_decorator(login_required)
     def get(self, request):
         user = request.user
+        
+        if not hasattr(user, 'gender') or not hasattr(user, 'age'):
+            return redirect('home')
+
         form = None  # Initialize form
         gender = user.gender
-        age = user.age  # Age is directly in CustomUser 
+        age = user.age  
 
         if user.role == 'doctor':
             form = DoctorOnboardingForm()
@@ -100,16 +93,19 @@ class OnboardingView(LoginRequiredMixin, View):
 
         return render(request, 'registration/onboarding.html', {
             'form': form,
-            'gender': gender,
-            'age': age,
             'show_prostate_screening': show_prostate_screening,
             'show_cervical_screening': show_cervical_screening,
             'show_breast_screening': show_breast_screening
         })
-
+    
+    @method_decorator(login_required)
     def post(self, request):
         user = request.user
 
+        if not hasattr(user, 'gender') or not hasattr(user, 'age'):
+            return redirect('home')  # Redirect 
+
+        # Determine the correct form based on the user's role
         if user.role == 'doctor':
             form = DoctorOnboardingForm(request.POST)
         elif user.role == 'patient':
@@ -122,19 +118,12 @@ class OnboardingView(LoginRequiredMixin, View):
         if form.is_valid():
             profile = form.save(commit=False)
             profile.user = user
-            
-            # If the user is a patient, save to PatientHistory
+        
+            # If the user is a patient, check and save to PatientHistory
             if user.role == 'patient':
-                patient_history = getattr(user, 'medical_history', None)
-                if patient_history:
-                    profile.user = user
-                    profile.save()  # Save PatientHistory
-                else:
-                    # Handle case where patient history does not exist
-                    # You might want to create a new PatientHistory instance here
-                    pass
-
-            profile.save()  # Save the form data
+                patient_history, created = PatientHistory.objects.get_or_create(user=user)
+                profile.user = user  # Attach the user to the profile if not done already
+                profile.save()  # Save PatientHistory
 
             # Redirect based on role
             return self.get_success_url(user)
@@ -142,10 +131,11 @@ class OnboardingView(LoginRequiredMixin, View):
         # If the form is invalid, re-render the form with existing data
         return render(request, 'registration/onboarding.html', {
             'form': form,
-            'gender': request.POST.get('gender', ""),
-            'age': user.age
+            'show_prostate_screening': request.POST.get('gender') == 'M' and int(request.POST.get('age', user.age)) > 40,
+            'show_cervical_screening': request.POST.get('gender') == 'F',
+            'show_breast_screening': request.POST.get('gender') == 'F'
         })
-
+    
     def get_success_url(self, user):
         """Return the URL to redirect user to their respective dashboard after onboarding."""
         if user.role == 'doctor':
@@ -159,6 +149,14 @@ class OnboardingView(LoginRequiredMixin, View):
         
         return reverse_lazy('default_dashboard')  # Ensure all paths return a URL
 
+class DashboardView(LoginRequiredMixin, View):
+    def get(self, request):
+        user= request.user
+        role= user.role
+
+        return render(request, "registration/dashboard.html", {"role": role})
+
+
 class DoctorDashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'registration/doctor_dashboard.html'
 
@@ -166,41 +164,7 @@ class DoctorDashboardView(LoginRequiredMixin, TemplateView):
         if not user_is_doctor(request.user) or not request.user.is_authenticated:
             return redirect('login')
         return super().dispatch(request, args, **kwargs)
-    
-
-class DefaultDashboardView(LoginRequiredMixin, TemplateView):
-    template_name = 'registration/default_dashboard.html'
-
-    def dispatch(self, request, *args, **kwargs):
-        if not (user_is_admin(request.user) or user_is_doctor(request.user) or user_is_patient(request.user) or user_is_pharmacist(request.user)):
-            return redirect('login')
-        return super().dispatch(request, *args, **kwargs)
-
-class PatientDashboardView(LoginRequiredMixin, TemplateView):
-    template_name = 'registration/patient_dashboard.html'
-
-    def dispatch(self, request, *args, **kwargs):
-        if not user_is_patient(request.user) or not request.user.is_authenticated:
-            return redirect('login')
-        return super().dispatch(request, *args, **kwargs)
-
-class PharmacistDashboardView(LoginRequiredMixin, TemplateView):
-    template_name = 'registration/pharmacist_dashboard.html'
-
-    def dispatch(self, request, *args, **kwargs):
-        if not user_is_pharmacist(request.user) or not request.user.is_authenticated:
-            return redirect('login')
-        return super().dispatch(request, *args, **kwargs)
-
-class AdminDashboardView(LoginRequiredMixin, TemplateView):
-    template_name = 'registration/admin_dashboard.html'
-
-    def dispatch(self, request, *args, **kwargs):
-        if not user_is_admin(request.user) or not request.user.is_authenticated:
-            return redirect('login')
-        return super().dispatch(request, *args, **kwargs)
-
-    
+        
 class UserUpdateView(LoginRequiredMixin, UpdateView):
     model = CustomUser
     form_class = UserUpdateForm
@@ -236,21 +200,32 @@ class CustomLogoutView(LogoutView):
         return JsonResponse({'redirect_url': reverse('login')})  # Adjust the redirect URL as needed
 
     
-class CustomRegisterView(View):
-    def get(self, request):
-        form = CustomUserCreationForm()
-        return render(request, 'registration/register.html', {'form': form})
+class CustomRegisterView(CreateView):
+    model = CustomUser
+    form_class = CustomUserCreationForm
+    template_name = 'registration/register.html'
+    success_url = reverse_lazy('onboarding')
 
-    def post(self, request):
-        form = CustomUserCreationForm(request.POST, request.FILES)
-        if form.is_valid():
-            user = form.save()
-            # Log the user in after registration
-            login(request, user)
-            messages.success(request, 'Your account has been created!')
-            return redirect(reverse_lazy('onboarding'))  # Redirect to the onboarding view
+    def form_valid(self, form):
+        user = form.save(commit=False)
+        user.set_password(form.cleaned_data['password'])
+        user.save()
 
-        return render(request, 'registration/register.html', {'form': form})
+        login(self.request, user)
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        return reverse_lazy('onboarding')
+    
+    def dispatch(self, *args, **kwargs):
+        if self.request.user.is_authenticated:
+            return redirect('onboarding')  # Redirect to onboarding if already logged in
+        return super().dispatch(*args, **kwargs)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Register'
+        return context
 
 
 class CustomUserViewSet(viewsets.ModelViewSet):
@@ -283,14 +258,15 @@ class ProfileViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         serializer.save(user=self.request.user)
 
+from rest_framework.parsers import MultiPartParser, FormParser
 
 
-
-class RegisterView(APIView):
+class RegisterAPIView(APIView):
     permission_classes = [AllowAny]
+    parser_classes = (MultiPartParser, FormParser)
 
     def post(self, request):
-        serializer = CustomUserSerializer(data=request.data)
+        serializer = CustomUserRegistrationSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
             return Response(
@@ -300,7 +276,7 @@ class RegisterView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class LoginView(APIView):
+class LoginAPIView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
@@ -313,7 +289,7 @@ class LoginView(APIView):
             if user:
                 login(request, user)
                 return Response(
-                    {"message": "Login successful"}, status=status.HTTP_200_OK
+                    {"message": "Login successful", "redirect_url": '/dashboard/'}, status=status.HTTP_200_OK
                 )
             return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -324,7 +300,10 @@ class LogoutView(APIView):
 
     def post(self, request):
         logout(request)
-        return Response({"message": "Logout successful"}, status=status.HTTP_200_OK)
+        return Response({
+            "message": "Logout successful",
+            "redirect_url": "/login"
+            }, status=status.HTTP_200_OK)
     
 class HomeView(TemplateView):
     template_name = 'registration/home.html'

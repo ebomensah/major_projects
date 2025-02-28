@@ -4,13 +4,19 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.views import LoginView, LogoutView
 from phonenumber_field.modelfields import PhoneNumberField
 
+
 class CustomUserCreationForm(UserCreationForm):
+    profile_picture = forms.ImageField(required=False)
     password1 = forms.CharField(label='Password', widget=forms.PasswordInput)
     password2 = forms.CharField(label='Confirm Password', widget=forms.PasswordInput)
     
     class Meta:
         model = CustomUser
-        fields = ['role','title', 'last_name', 'first_name', 'age', 'email', 'phone_number', 'profile_picture', 'username', 'password1', 'password2']
+        fields = ['role', 'title', 'last_name', 'first_name', 'age', 'email', 'phone_number', 'profile_picture', 'username', 'password1', 'password2']
+        widgets = {
+            'profile_picture': forms.ClearableFileInput(attrs={'class':'form-ocntrol'}),
+        }
+        
 
     def clean_password2(self):
             password1 = self.cleaned_data.get('password1')
@@ -24,6 +30,9 @@ class CustomUserCreationForm(UserCreationForm):
         user = super().save(commit=False)
         user.set_password(self.cleaned_data['password1'])
         if commit:
+            user.save()
+        if self.cleaned_data['profile_picture']:
+            user.profile_picture = self.cleaned_data['profile_picture']
             user.save()
         return user
     
@@ -95,7 +104,6 @@ class PatientOnboardingForm(forms.ModelForm):
     ]
 
 
-    age= forms.IntegerField(required=True, label='Age', widget=forms.HiddenInput())
     allergies = forms.ChoiceField(required=True, label='Do you have any allergies?', choices=BASE_CHOICES)
     allergies_detail = forms.CharField(max_length=255, label='List those allergies here', widget=forms.Textarea(attrs={'rows': 4, 'cols': 40}))
     chronic_disease_status = forms.ChoiceField(required=True, choices=BASE_CHOICES, label='Do you have any chronic disease?')
@@ -118,7 +126,7 @@ class PatientOnboardingForm(forms.ModelForm):
         model = PatientHistory
         # fields= ['allergies', 'allergies_detail', 'chronic_disease_status', 'chronic_disease_detail', 'smoking_status', 'smoking_detail', 'alcohol_status', 'alcohol_detail', 'blood_group', 'genotype', 'implant', 'vitals', 'recent_labs']
         fields= '__all__'
-        exclude = ['user', 'gender']
+        exclude = ['user']
 
     
     def save(self, commit=True):

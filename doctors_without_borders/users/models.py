@@ -31,7 +31,7 @@ class CustomUser(AbstractUser):
 
     gender = models.CharField(max_length=20, choices=GENDER_CHOICES, null=True)
     phone_number = PhoneNumberField(blank=True, null=True, unique=True)
-    profile_picture = models.ImageField(upload_to= 'profile_pics/', blank= True, null=True)
+    profile_picture = models.ImageField(upload_to= 'profile_pics/', default='profile_pics/default.png', blank= True, null=True)
     
     
     def __str__(self):

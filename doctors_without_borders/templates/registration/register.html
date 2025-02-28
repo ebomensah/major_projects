@@ -1,34 +1,71 @@
+<!-- register.html -->
+
 {% extends 'base.html' %}
-{% block title %}Login Form{% endblock %}
+{% load static %}
+
+{% block title %}Register{% endblock %}
 {% block content %}
 
 <div class="container">
     <div class="form-container">
-        <h2>Register</h2>
-        <form method="POST" enctype="multipart/form-data">
+        <h2>Create an Account</h2>
+        <br>
+        <form id="register-form" method="post" enctype="multipart/form-data">
             {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit">Register</button>
-            <br>
-            <span> Have an account? <a href="{% url 'login' %}"> Login</a></span>
+
+            <label for = role> What are you signing up as?</label>
+            <select name="role" required>
+                <option value="patient">Patient</option>
+                <option value="doctor">Doctor</option>
+                <option value="pharmacist">Pharmacist</option>
+            </select><br><br>
+            
+            <label for = title> Title </label>
+            <select name="title" required>
+                <option value="Mr"> Mr </option>
+                <option value="Ms"> Ms </option>
+                <option value="Mrs."> Mrs. </option>
+                <option value="Dr"> Dr </option>
+                <option value="Prof"> Prof </option>
+            </select><br><br>
+
+            <label for = first_name > First name </label>
+            <input type="text" name="first_name" placeholder="First Name" required><br><br>
+
+            <label for = last_name> Last name </label>
+            <input type="text" name="last_name" placeholder="Last Name" required><br><br>
+
+            <label for = username> Username  </label>
+            <input type="text" name="username" placeholder="Username" required><br><br>
+
+            <label for = age> Age </label>
+            <input type="number" name="age" placeholder="Age" required><br><br>
+
+            <label for = gender> Gender</label>
+            <select name="gender" required>
+                <option value="M">Male</option>
+                <option value="F">Female</option>
+                <option value="O">Other</option>
+            </select><br><br>
+
+            
+            <label for = email> Email </label>
+            <input type="email" name="email" placeholder="Email" required><br><br>
+            
+            <label for = password> Password </label>
+            <input type="password" name="password" placeholder="Password" required><br><br>
+            
+            <label for = profile_picture> Profile picture</label>
+            <input type="file" name="profile_picture" placeholder="Profile Picture"><br><br>
+
+            <button type="submit">Register</button><br><br>
+        <span>Already have an account?<a href ="{% url 'login' %}"> Login</a></span>
         </form>
     </div>
-
-        {% if form.errors %}
-            <div class="error">
-                <p>Please correct the following errors:</p>
-                <ul>
-                    {% for field in form %}
-                        {% for error in field.errors %}
-                        <li>{{ error }}</li>
-                    {% endfor %}
-                {% endfor %}
-                {% for error in form.non_field_errors %}
-                    <li>{{ error }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-    {% endif %}
 </div>
 
+{% endblock %}
+
+{% block extra_scripts %}
+    <script src="{% static 'js/registration.js' %}"></script>
 {% endblock %}
