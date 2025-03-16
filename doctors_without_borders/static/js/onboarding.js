@@ -1,51 +1,61 @@
-document.addEventListener('DOMContentLoaded', function() {
-    // Function to show or hide follow-up question based on the selected value
-    function toggleFollowUp(questionId, detailsId) {
-        const question = document.getElementById(questionId);
-        const details = document.getElementById(detailsId);
+document.addEventListener('DOMContentLoaded', function () {
+    const dependencies = [
+        { questionId: 'id_allergies', detailId: 'id_allergies_detail' },
+        { questionId: 'id_chronic_disease_status', detailId: 'id_chronic_disease_detail' },
+        { questionId: 'id_smoking_status', detailId: 'id_smoking_detail' },
+        { questionId: 'id_alcohol_status', detailId: 'id_alcohol_detail' },
+    ];
 
-        // Check if question exists and has the correct answer
-        if (question && details) {
-            if (question.value === 'yes') {
-                details.style.display = 'block'; // Show the details if answer is "Yes"
-            } else {
-                details.style.display = 'none'; // Hide the details if answer is "No"
-            }
+    function toggleFollowUp(questionId, detailId) {
+        const question = document.getElementById(questionId);
+        const detail = document.getElementById(detailId);
+
+        if (!question || !detail) {
+            console.warn(`Missing element: ${!question ? questionId : detailId}`);
+            return;
+        }
+
+        // Optional: Hide both the label and the input
+        const label = document.querySelector(`label[for="${detailId}"]`);
+
+        if (question.value === 'Yes') {
+            detail.style.display = 'block';
+            if (label) label.style.display = 'block';
+        } else {
+            detail.style.display = 'none';
+            if (label) label.style.display = 'none';
         }
     }
 
-    // Set up event listeners for each question (status questions)
-    const allergiesQuestion = document.getElementById('allergies');
-    if (allergiesQuestion) {
-        allergiesQuestion.addEventListener('change', function() {
-            toggleFollowUp('allergies', 'allergies-details');
-        });
-    }
-
-    const chronicDiseaseQuestion = document.getElementById('chronic_disease');
-    if (chronicDiseaseQuestion) {
-        chronicDiseaseQuestion.addEventListener('change', function() {
-            toggleFollowUp('chronic_disease', 'chronic-disease-details');
-        });
-    }
-
-    const smokeQuestion = document.getElementById('smoke');
-    if (smokeQuestion) {
-        smokeQuestion.addEventListener('change', function() {
-            toggleFollowUp('smoke', 'smoke-details');
-        });
-    }
-
-    const alcoholQuestion = document.getElementById('alcohol');
-    if (alcoholQuestion) {
-        alcoholQuestion.addEventListener('change', function() {
-            toggleFollowUp('alcohol', 'alcohol-details');
-        });
-    }
-
-    // Initial check to make sure any previously selected options are respected
-    toggleFollowUp('allergies', 'allergies-details');
-    toggleFollowUp('chronic_disease', 'chronic-disease-details');
-    toggleFollowUp('smoke', 'smoke-details');
-    toggleFollowUp('alcohol', 'alcohol-details');
+    dependencies.forEach(({ questionId, detailId }) => {
+        const question = document.getElementById(questionId);
+        if (question) {
+            question.addEventListener('change', () => toggleFollowUp(questionId, detailId));
+            toggleFollowUp(questionId, detailId); // On page load
+        }
+    });
 });
+
+// document.addEventListener('DOMContentLoaded', function() {
+//     const container = document.getElementById('onboarding-container');
+//     const age = parseInt(container.dataset.userAge, 10);
+//     const gender = container.dataset.userGender.toLowerCase();
+
+//     // Question wrappers (wrap each target question in a <p> or <div> with these IDs)
+//     const prostateQuestion = document.querySelector('id_prostate_screening');
+//     const cervicalQuestion = document.getElementById('id_cervical_cancer_screening');
+//     const breastQuestion = document.getElementById('id_breast_cancer_screening');
+
+//     if (prostateQuestion) prostateQuestion.style.display = 'none';
+//     if (cervicalQuestion) cervicalQuestion.style.display = 'none';
+//     if (breastQuestion) breastQuestion.style.display = 'none';
+
+//     if (gender === 'Male' && age >= 40 && prostateQuestion) {
+//         prostateQuestion.style.display = 'block';
+//     }
+
+//     if (gender === 'Female' && age >= 18) {
+//         if (cervicalQuestion) cervicalQuestion.style.display = 'block';
+//         if (breastQuestion) breastQuestion.style.display = 'block';
+//     }
+// });

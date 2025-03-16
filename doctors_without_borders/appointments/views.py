@@ -22,21 +22,22 @@ from django.contrib import messages
 
 
 def get_prescriptions(request):
-    prescriptions = Consultation.objects.exclude(prescriptions="")
+    prescriptions = Consultation.objects.filter(
+        status="completed",
+        prescriptions__isnull=False,
+        prescriptions__gt="",
+        prescription_served=False  # Ensure only unserved prescriptions are fetched
+    )
 
-    # Create a list of prescriptions to send as JSON
     data = [
         {
+            "id": c.id,  # Include prescription ID for the button
             "patient": f"{c.appointment.patient.first_name} {c.appointment.patient.last_name}",
             "doctor": f"Dr. {c.appointment.doctor.first_name} {c.appointment.doctor.last_name}",
-            "prescriptions": c.prescriptions
+            "prescriptions": c.prescriptions,
         }
         for c in prescriptions
     ]
-
-    # Ensure that we are sending prescriptions as an empty list if none found
-    if not data:
-        data = []
 
     return JsonResponse({"prescriptions": data})
 
@@ -57,7 +58,7 @@ class MarkPrescriptionAsServedView(UpdateAPIView):
     serializer_class = ConsultationSerializer
     permission_classes = [IsAuthenticated]
 
-    def patch(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):  # Change to POST
         user = request.user
         if user.role != 'pharmacist':
             return Response({"error": "Unauthorized"}, status=status.HTTP_403_FORBIDDEN)
@@ -69,7 +70,6 @@ class MarkPrescriptionAsServedView(UpdateAPIView):
             return Response({"message": "Prescription marked as served."}, status=status.HTTP_200_OK)
         except Consultation.DoesNotExist:
             return Response({"error": "Consultation not found"}, status=status.HTTP_404_NOT_FOUND)
-
 
 
 @method_decorator(login_required, name='dispatch')

@@ -6,16 +6,17 @@
 {% block content %}
     <div class="container">
         <h2>Login</h2><br>
-        <form id="login-form" method="POST">
+        <form id="login-form" method="POST" action="{% url 'login' %}">
             {% csrf_token %}
             <label for="username">Username:</label>
-            <input type="text" id="username" name="username" required><br><br>
+            <input type="text" id="username" name="username" required><br>
             
             <label for="password">Password:</label>
-            <input type="password" id="password" name="password" required><br><br>
+            <input type="password" id="password" name="password" required><br>
             
-            <button type="submit">Login</button>
-            <span> Don't have an account? <a href="{% url 'register' %}"> Register</a></span>
+            <button type="submit">Login</button><br><br>
+            <span> Don't have an account? <a href="{% url 'register' %}"> Register</a></span><br>
+            <span>Forgot password?<a href="{% url 'password_reset' %}" > Reset </a></span>
         </form>
     </div>
 {% endblock %}

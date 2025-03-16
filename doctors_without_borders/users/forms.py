@@ -6,7 +6,6 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 
 class CustomUserCreationForm(UserCreationForm):
-    profile_picture = forms.ImageField(required=False)
     password1 = forms.CharField(label='Password', widget=forms.PasswordInput)
     password2 = forms.CharField(label='Confirm Password', widget=forms.PasswordInput)
     
@@ -39,7 +38,7 @@ class CustomUserCreationForm(UserCreationForm):
 class UserUpdateForm(forms.ModelForm):
     class Meta:
         model = CustomUser
-        fields = ['username', 'profile_picture']
+        fields = ['title', 'username', 'profile_picture']
         widgets = {
             'profile_picture': forms.ClearableFileInput(attrs={'class':'form-ocntrol'}),
         }
@@ -66,7 +65,7 @@ class DoctorOnboardingForm(forms.ModelForm):
 
     class Meta:
         model= DoctorHistory
-        fields= ['license_id', 'address', 'place_of_work', 'payment_options', 'payment_name']
+        fields= ['license_id', 'specialized', 'address', 'place_of_work', 'payment_options', 'payment_name']
 
 
 class PatientOnboardingForm(forms.ModelForm):
@@ -105,33 +104,33 @@ class PatientOnboardingForm(forms.ModelForm):
 
 
     allergies = forms.ChoiceField(required=True, label='Do you have any allergies?', choices=BASE_CHOICES)
-    allergies_detail = forms.CharField(max_length=255, label='List those allergies here', widget=forms.Textarea(attrs={'rows': 4, 'cols': 40}))
+    allergies_detail = forms.CharField(required=False, max_length=255, label='List those allergies here', widget=forms.Textarea(attrs={'rows': 4, 'cols': 40}))
     chronic_disease_status = forms.ChoiceField(required=True, choices=BASE_CHOICES, label='Do you have any chronic disease?')
-    chronic_disease_detail = forms.MultipleChoiceField(required=False, choices=CHRONIC_DISEASE_CHOICES, label='Select any chronic diseases you have:', widget=forms.CheckboxSelectMultiple)
+    chronic_disease_detail = forms.MultipleChoiceField(label='Select any chronic diseases you have:', required=False, choices=CHRONIC_DISEASE_CHOICES, widget=forms.CheckboxSelectMultiple)
     smoking_status = forms.ChoiceField(required=True, choices=BASE_CHOICES, label='Do you smoke?')
-    smoking_detail = forms.CharField(max_length=500, label='If yes, how often do you smoke and how many packs do you take in a day?')
+    smoking_detail = forms.CharField(required=False, max_length=500, label='If yes, how often do you smoke and how many packs do you take in a day?')
     alcohol_status = forms.ChoiceField(choices=BASE_CHOICES, label='Do you take alcohol?')
-    alcohol_detail= forms.CharField(max_length=500, label='If yes, How often do you take alcohol?')
+    alcohol_detail= forms.CharField(required=False, max_length=500, label='If yes, How often do you take alcohol?')
     blood_group = forms.ChoiceField(required=True, label='What is your blood group?', choices=BLOOD_GROUP_CHOICES)
     genotype = forms.ChoiceField(required=True, label='What is your genotype?', choices=GENOTYPE_CHOICES)
-    implant=forms.CharField(max_length=500, label='Do you have any form of implant? Kindly state that here:', required=True)
-    vitals = forms.CharField(max_length=500, label='State the results of your last check for the following(Blood pressure, Pulse Rate, Random Blood Glucose)', required=True)
+    implant=forms.CharField(max_length=500, label='Do you have any form of implant? Kindly state that here:', required=False)
+    vitals = forms.CharField(max_length=500, label='State the results of your last check for the following(Blood pressure, Pulse Rate, Random Blood Glucose)', required=False)
     recent_labs = forms.ImageField(required=False,
         label= 'Have you done any recent labs? Kindly upload the results here:')
-    prostate_screening = forms.ChoiceField(label="Have you been screened for prostate disease?", choices=BASE_CHOICES, required=True)
-    cervical_cancer_screening = forms.ChoiceField(label='Have you been screened for lesions of the cervix?', choices=BASE_CHOICES, required=True)
-    breast_cancer_screening = forms.ChoiceField(label='Have you been screened for lesions of the breast?', choices=BASE_CHOICES, required=True)
+    prostate_screening = forms.ChoiceField(label="Have you been screened for prostate disease?", choices=BASE_CHOICES, required=False)
+    cervical_cancer_screening = forms.ChoiceField(label='Have you been screened for lesions of the cervix?', choices=BASE_CHOICES, required=False)
+    breast_cancer_screening = forms.ChoiceField(label='Have you been screened for lesions of the breast?', choices=BASE_CHOICES, required=False)
 
     class Meta:
         model = PatientHistory
-        # fields= ['allergies', 'allergies_detail', 'chronic_disease_status', 'chronic_disease_detail', 'smoking_status', 'smoking_detail', 'alcohol_status', 'alcohol_detail', 'blood_group', 'genotype', 'implant', 'vitals', 'recent_labs']
-        fields= '__all__'
+        fields= ['allergies', 'allergies_detail', 'chronic_disease_status', 'chronic_disease_detail', 'smoking_status', 'smoking_detail', 'alcohol_status', 'alcohol_detail', 'blood_group', 'genotype', 'implant', 'vitals', 'recent_labs', 'prostate_screening', 'cervical_cancer_screening', 'breast_cancer_screening']
         exclude = ['user']
-
     
     def save(self, commit=True):
         patient_history = super().save(commit=False)
-        patient_history.user = self.instance.user  # Link history to user
+        user= self.instance.user
+        if user:
+            patient_history.user = user
 
         if commit:
             patient_history.save()

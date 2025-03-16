@@ -9,7 +9,7 @@ from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from .models import CustomUser, Profile, PatientHistory
+from .models import CustomUser, Profile, PatientHistory, DoctorHistory, PharmacistHistory
 from .serializers import CustomUserSerializer, ProfileSerializer, UserUpdateSerializer, LoginSerializer, CustomUserRegistrationSerializer
 from django.views.generic import TemplateView, View, UpdateView
 from django.http import JsonResponse, HttpResponse
@@ -53,101 +53,99 @@ class CustomLoginView(LoginView):
     def post(self, request):
         username = request.POST.get("username")
         password = request.POST.get("password")
+
+        print(f"Username: {username}, Password: {password}")
+
         user = authenticate(request, username=username, password=password)
 
         if user:
             login(request, user)
-            return redirect("dashboard")
+            return redirect("dashboard")  # Redirect to dashboard if not first-time login
         return render(request, "login.html", {"error": "Invalid credentials"})
         
 
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 
+
 class OnboardingView(View):
     @method_decorator(login_required)
     def get(self, request):
         user = request.user
-        
+
+        # Ensure user has necessary attributes
         if not hasattr(user, 'gender') or not hasattr(user, 'age'):
-            return redirect('home')
+            return redirect('dashboard')
 
-        form = None  # Initialize form
-        gender = user.gender
-        age = user.age  
-
+        # Select the correct form based on role
+        form = None
         if user.role == 'doctor':
             form = DoctorOnboardingForm()
-        elif user.role == 'patient':
-            form = PatientOnboardingForm()
         elif user.role == 'pharmacist':
             form = PharmacistOnboardingForm()
+        elif user.role == 'patient':
+            form = PatientOnboardingForm()
         else:
-            return redirect('home')
+            return redirect('dashboard')
         
-        show_prostate_screening = gender == 'M' and age > 40
-        show_cervical_screening = gender == 'F'
-        show_breast_screening = gender == 'F'
+        age= user.age
+        gender= user.gender.lower()
 
-        print(f"Gender: {gender}, Age: {age}, Show Prostate: {show_prostate_screening}, Show Cervical: {show_cervical_screening}, Show Breast: {show_breast_screening}")
+        from django.forms import HiddenInput
 
-        return render(request, 'registration/onboarding.html', {
-            'form': form,
-            'show_prostate_screening': show_prostate_screening,
-            'show_cervical_screening': show_cervical_screening,
-            'show_breast_screening': show_breast_screening
-        })
-    
+        if form and isinstance(form, PatientOnboardingForm):
+            # Check if fields exist in the form before attempting to hide
+            if 'prostate_screening' in form.fields and not (gender == 'M' and age >= 40):
+                form.fields['prostate_screening'].widget = HiddenInput()
+
+            if 'cervical_cancer_screening' in form.fields and not (gender == 'F' and age >= 18):
+                form.fields['cervical_cancer_screening'].widget = HiddenInput()
+                form.fields['breast_cancer_screening'].widget = HiddenInput()
+
+        return render(request, 'registration/onboarding.html', {'form': form})
+
     @method_decorator(login_required)
     def post(self, request):
         user = request.user
 
-        if not hasattr(user, 'gender') or not hasattr(user, 'age'):
-            return redirect('home')  # Redirect 
+        if user.role == 'patient' and hasattr(user, 'patient_history'):
+            return redirect('dashboard') 
+        if user.role == 'doctor' and hasattr(user, 'doctor_history'):
+            return redirect('dashboard') 
+        if user.role == 'pharmacist' and hasattr(user, 'pharmacist_history'):
+            return redirect('dashboard') 
 
-        # Determine the correct form based on the user's role
+        form= None
         if user.role == 'doctor':
-            form = DoctorOnboardingForm(request.POST)
-        elif user.role == 'patient':
-            form = PatientOnboardingForm(request.POST)
+            form = DoctorOnboardingForm(request.POST, request.FILES)
         elif user.role == 'pharmacist':
-            form = PharmacistOnboardingForm(request.POST)
+            form = PharmacistOnboardingForm(request.POST, request.FILES)
+        elif user.role == 'patient':
+            form = PatientOnboardingForm(request.POST, request.FILES)
         else:
-            return redirect('home')
+            return redirect('dashboard')
+        
+        form.instance.user = user 
 
         if form.is_valid():
-            profile = form.save(commit=False)
-            profile.user = user
-        
-            # If the user is a patient, check and save to PatientHistory
-            if user.role == 'patient':
-                patient_history, created = PatientHistory.objects.get_or_create(user=user)
-                profile.user = user  # Attach the user to the profile if not done already
-                profile.save()  # Save PatientHistory
+            instance = form.save(commit=False)
+            instance.user = user
+            instance.save()
 
-            # Redirect based on role
-            return self.get_success_url(user)
+            if user.role == 'patient' and not hasattr(user, 'patient_history'):
+                PatientHistory.objects.create(user=user)  # Create the patient's history
 
-        # If the form is invalid, re-render the form with existing data
-        return render(request, 'registration/onboarding.html', {
-            'form': form,
-            'show_prostate_screening': request.POST.get('gender') == 'M' and int(request.POST.get('age', user.age)) > 40,
-            'show_cervical_screening': request.POST.get('gender') == 'F',
-            'show_breast_screening': request.POST.get('gender') == 'F'
-        })
-    
-    def get_success_url(self, user):
-        """Return the URL to redirect user to their respective dashboard after onboarding."""
-        if user.role == 'doctor':
-            return reverse_lazy('doctor_dashboard')
-        elif user.role == 'patient':
-            return reverse_lazy('patient_dashboard')
-        elif user.role == 'pharmacist':
-            return reverse_lazy('pharmacist_dashboard')
-        elif user.role == 'admin':
-            return reverse_lazy('admin_dashboard')
-        
-        return reverse_lazy('default_dashboard')  # Ensure all paths return a URL
+            # Mark onboarding as completed
+            if user.first_time_login:
+                user.first_time_login = False
+                user.save()
+            
+            return redirect ('dashboard')
+        else:
+            print("Form is NOT valid")
+            print(form.errors)
+            form.add_error(None, "There are errors in the form. Kindly correct them and resubmit.")
+            return render(request, 'registration/onboarding.html', {'form': form})
 
 class DashboardView(LoginRequiredMixin, View):
     def get(self, request):
@@ -156,14 +154,6 @@ class DashboardView(LoginRequiredMixin, View):
 
         return render(request, "registration/dashboard.html", {"role": role})
 
-
-class DoctorDashboardView(LoginRequiredMixin, TemplateView):
-    template_name = 'registration/doctor_dashboard.html'
-
-    def dispatch(self, request, *args, **kwargs):
-        if not user_is_doctor(request.user) or not request.user.is_authenticated:
-            return redirect('login')
-        return super().dispatch(request, args, **kwargs)
         
 class UserUpdateView(LoginRequiredMixin, UpdateView):
     model = CustomUser
@@ -175,23 +165,11 @@ class UserUpdateView(LoginRequiredMixin, UpdateView):
 
     def form_valid(self, form):
         form.save()
-
         messages.success(self.request, "Your profile has been updated successfully!")
         return super().form_valid(form)
-        
-        
-    def get_success_url(self):    
-        user = self.request.user
-        if user.role == 'doctor':
-            return reverse_lazy ('doctor_dashboard')
-        elif user.role == 'patient':
-            return reverse_lazy('patient_dashboard')
-        elif user.role == 'pharmacist':
-            return reverse_lazy('pharmacist_dashboard')
-        elif user.role == 'admin':
-            return reverse_lazy ('admin_dashboard')
-        
-        return reverse_lazy ('default_dashboard')
+
+    def get_success_url(self):
+        return reverse_lazy('dashboard')  # Redirect all users to the same dashboard
         
 
 class CustomLogoutView(LogoutView):
@@ -209,13 +187,12 @@ class CustomRegisterView(CreateView):
     def form_valid(self, form):
         user = form.save(commit=False)
         user.set_password(form.cleaned_data['password'])
+        user.is_active = True  # Ensure user is active by default
+        user.first_time_login = True  # Ensure first-time login is marked as True
         user.save()
 
         login(self.request, user)
         return super().form_valid(form)
-    
-    def get_success_url(self):
-        return reverse_lazy('onboarding')
     
     def dispatch(self, *args, **kwargs):
         if self.request.user.is_authenticated:

@@ -45,8 +45,6 @@ function getCookie(name) {
     return cookieValue;
 }
 
-
-
 function markAsRead(event, notificationId) {
         event.preventDefault(); // Prevent the page from refreshing
        
@@ -70,46 +68,3 @@ function markAsRead(event, notificationId) {
         .catch(error => console.error('Error marking notification as read:', error));
     }
 
-
-    document.addEventListener("DOMContentLoaded", function() {
-    fetch("/api/pharmacist/prescriptions/", {
-        headers: {
-            "Authorization": "Bearer " + localStorage.getItem("token"),
-        },
-    })
-    .then(response => response.json())
-    .then(data => {
-        const prescriptionList = document.getElementById("prescription-list");
-        prescriptionList.innerHTML = "";
-
-        data.forEach(consultation => {
-            const item = document.createElement("li");
-            item.innerHTML = `
-                <strong>${consultation.patient_name}</strong>: ${consultation.prescriptions}
-                (Prescribed by Dr. ${consultation.doctor_name}) 
-                <button class="serve-btn" data-id="${consultation.id}">Mark as Served</button>
-            `;
-            prescriptionList.appendChild(item);
-        });
-
-        document.querySelectorAll(".serve-btn").forEach(button => {
-            button.addEventListener("click", function() {
-                const consultationId = this.getAttribute("data-id");
-                fetch(`/api/pharmacist/prescriptions/${consultationId}/serve/`, {
-                    method: "PATCH",
-                    headers: {
-                        "Authorization": "Bearer " + localStorage.getItem("token"),
-                        "Content-Type": "application/json",
-                    },
-                })
-                .then(response => response.json())
-                .then(data => {
-                    alert(data.message);
-                    this.parentElement.remove(); // Remove item from list after serving
-                })
-                .catch(error => console.error("Error:", error));
-            });
-        });
-    })
-    .catch(error => console.error("Error fetching prescriptions:", error));
-});

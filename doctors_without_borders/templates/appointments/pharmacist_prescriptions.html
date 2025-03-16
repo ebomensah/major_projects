@@ -5,7 +5,7 @@
     <h1 class="mb-4 text-center">Prescriptions</h1>
 
     {% if prescriptions %}
-        <div class="table-responsive">
+        <div class="table-responsive" id="pharmacist-list">
             <table class="table table-hover table-striped table-bordered">
                 <thead class="thead-dark">
                     <tr>
@@ -41,15 +41,13 @@
                             </td>
                             <td>
                                 {% if not prescription.prescription_served %}
-                                    <form action="{% url 'mark-prescription-served' pk=prescription.pk %}" method="post" class="d-inline"> 
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-success btn-sm">
-                                            <i class="fas fa-check-circle"></i>Mark as Served
-                                        </button>
-                                    </form>
+                                    <button type="button" class="btn btn-success btn-sm mark-served-btn" data-id="{{ prescription.pk }}">
+                                        <i class="fas fa-check-circle"></i> Mark as Served
+                                    </button>
                                 {% else %}
                                     <button class="btn btn-secondary btn-sm" disabled>
-                                        <i class="fas fa-check-circle"></i>Already Served</button>
+                                        <i class="fas fa-check-circle"></i> Already Served
+                                    </button>
                                 {% endif %}
                             </td>
                         </tr>

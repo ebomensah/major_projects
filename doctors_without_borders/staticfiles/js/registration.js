@@ -1,22 +1,25 @@
-// registration.js
-
-document.getElementById("register-form").addEventListener("submit", function(event) {
+document.getElementById("register-form").addEventListener("submit", async function(event) {
     event.preventDefault();
 
-    const formData = new FormData(event.target);
-    
-    fetch('/api/register/', {
-        method: 'POST',
-        body: formData,
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.message) {
+    let formData = new FormData(this);
+
+    try {
+        let response = await fetch('/api/register/', {
+            method: 'POST',
+            body: formData  // Do NOT manually set Content-Type; FormData handles it
+        });
+
+        let data = await response.json();
+        
+        if (response.ok) {
             alert(data.message);
             window.location.href = '/onboarding';  // Redirect to onboarding page
         } else {
-            alert("Registration failed. Please try again.");
+            console.error('Registration failed:', data);
+            alert(`Error: ${data.error || "Registration failed. Please check your inputs."}`);
         }
-    })
-    .catch(error => console.error('Error:', error));
+    } catch (error) {
+        console.error('Network or server error:', error);
+        alert("A network error occurred. Please try again.");
+    }
 });

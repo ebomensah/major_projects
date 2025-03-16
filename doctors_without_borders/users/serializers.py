@@ -15,9 +15,18 @@ class CustomUserRegistrationSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def create(self, validated_data):
-        user = CustomUser.objects.create_user(**validated_data)
-        return user
+        groups = validated_data.pop('groups', None)  # ✅ Remove `groups` before passing data
+        user_permissions = validated_data.pop('user_permissions', None)  # ✅ Remove `user_permissions`
 
+        user = CustomUser.objects.create_user(**validated_data)  # ✅ Pass cleaned data
+
+        if groups:
+            user.groups.set(groups)  # ✅ Set `groups` safely
+        if user_permissions:
+            user.user_permissions.set(user_permissions)  # ✅ Set `user_permissions` safely
+
+        return user
+    
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField(write_only=True)

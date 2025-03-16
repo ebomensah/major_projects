@@ -22,30 +22,30 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    const chronicDiseaseQuestion = document.getElementById('chronic_disease');
+    const chronicDiseaseQuestion = document.getElementById('chronic_disease_status');
     if (chronicDiseaseQuestion) {
         chronicDiseaseQuestion.addEventListener('change', function() {
-            toggleFollowUp('chronic_disease', 'chronic-disease-details');
+            toggleFollowUp('chronic_disease_status', 'chronic-disease-details');
         });
     }
 
-    const smokeQuestion = document.getElementById('smoke');
+    const smokeQuestion = document.getElementById('smoking_status');
     if (smokeQuestion) {
         smokeQuestion.addEventListener('change', function() {
-            toggleFollowUp('smoke', 'smoke-details');
+            toggleFollowUp('smoking_status', 'smoke-details');
         });
     }
 
-    const alcoholQuestion = document.getElementById('alcohol');
+    const alcoholQuestion = document.getElementById('alcohol_status');
     if (alcoholQuestion) {
         alcoholQuestion.addEventListener('change', function() {
-            toggleFollowUp('alcohol', 'alcohol-details');
+            toggleFollowUp('alcohol_status', 'alcohol-details');
         });
     }
 
     // Initial check to make sure any previously selected options are respected
     toggleFollowUp('allergies', 'allergies-details');
-    toggleFollowUp('chronic_disease', 'chronic-disease-details');
-    toggleFollowUp('smoke', 'smoke-details');
-    toggleFollowUp('alcohol', 'alcohol-details');
+    toggleFollowUp('chronic_disease_status', 'chronic-disease-details');
+    toggleFollowUp('smoking_status', 'smoke-details');
+    toggleFollowUp('alcohol_status', 'alcohol-details');
 });
