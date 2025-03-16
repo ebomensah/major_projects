@@ -89,7 +89,7 @@ class OnboardingView(View):
             return redirect('dashboard')
         
         age= user.age
-        gender= user.gender.lower()
+        gender= user.gender
 
         from django.forms import HiddenInput
 
