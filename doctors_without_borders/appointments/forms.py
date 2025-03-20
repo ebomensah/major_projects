@@ -1,5 +1,6 @@
 from django import forms    
-from .models import Appointment, Consultation
+from .models import Appointment, Consultation, Availability
+
 from django.contrib.auth import get_user_model
 
 class AppointmentForm (forms.ModelForm):
@@ -29,3 +30,14 @@ class ConsultationForm(forms.ModelForm):
             'class': 'form-control'}
         )
     )
+
+class AvailabilityForm(forms.ModelForm):
+    class Meta:
+        model = Availability
+        fields = ['date', 'start_time', 'end_time', 'slot_duration']
+        widgets = {
+            'date': forms.DateInput(attrs={'type': 'date'}),
+            'start_time': forms.TimeInput(attrs={'type': 'time'}),
+            'end_time': forms.TimeInput(attrs={'type': 'time'}),
+            'slot_duration': forms.NumberInput(attrs={'min': 15, 'step': 15}),
+        }

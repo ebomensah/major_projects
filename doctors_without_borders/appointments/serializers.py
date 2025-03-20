@@ -1,15 +1,73 @@
+# Edited this to reflect slots for appointments. with start time endtime
 from rest_framework import serializers
-from .models import Appointment, Consultation
+from .models import Appointment, Availability, Consultation
 from django.contrib.auth import get_user_model
+from datetime import datetime, timedelta
+from .models import Availability
+
+User = get_user_model()
 
 class AppointmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Appointment
-        fields = ['id', 'doctor', 'date_time', 'reason', 'notes']
+        fields = ['id', 'doctor', 'date', 'start_time', 'end_time', 'reason', 'notes']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['doctor'].queryset = get_user_model().objects.filter(role='doctor')
+        self.fields['doctor'].queryset = User.objects.filter(role='doctor')
+
+    def validate(self, data):
+        doctor = data.get('doctor')
+        date = data.get('date')
+        start_time = data.get('start_time')
+        end_time = data.get('end_time')
+
+        # 1. End time must be after start time
+        if start_time >= end_time:
+            raise serializers.ValidationError("End time must be after start time.")
+
+        # 2. Match with an availability block
+        try:
+            availability = Availability.objects.get(
+                doctor=doctor,
+                date=date,
+                start_time__lte=start_time,
+                end_time__gte=end_time
+            )
+        except Availability.DoesNotExist:
+            raise serializers.ValidationError("Appointment is outside the doctor's availability.")
+
+        # 3. Check duration matches availability slot duration
+        delta = datetime.combine(date, end_time) - datetime.combine(date, start_time)
+        if delta.total_seconds() % (availability.slot_duration * 60) != 0:
+            raise serializers.ValidationError(
+                f"Appointment duration must be a multiple of {availability.slot_duration} minutes."
+            )
+
+        # 4. Prevent overlap with existing appointments
+        conflict = Appointment.objects.filter(
+            doctor=doctor,
+            date=date,
+            start_time__lt=end_time,
+            end_time__gt=start_time
+        ).exists()
+
+        if conflict:
+            raise serializers.ValidationError("This time slot is already booked.")
+
+        return data
+
+
+
+class AvailabilitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Availability
+        fields = ['id', 'date', 'start_time', 'end_time', 'slot_duration']
+
+    def validate(self, data):
+        if data['start_time'] >= data['end_time']:
+            raise serializers.ValidationError("End time must be after start time.")
+        return data
 
 
 class ConsultationSerializer(serializers.ModelSerializer):
