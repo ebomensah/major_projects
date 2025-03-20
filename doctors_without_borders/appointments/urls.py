@@ -1,20 +1,23 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import AppointmentViewSet, ConsultationViewSet
+from .views import AppointmentViewSet, ConsultationViewSet, DoctorAvailabilityViewSet
 from .views import AppointmentListView, ConsultationListView, BookAppointmentView, ConsultationCreateView
 from .views import (
     AppointmentDetailView, AppointmentUpdateView, AppointmentDeleteView,
     ConsultationDetailView, ConsultationUpdateView, ConsultationDeleteView,
-    PharmacistPrescriptionListView, MarkPrescriptionAsServedView, get_prescriptions
+    PharmacistPrescriptionListView, MarkPrescriptionAsServedView,  DoctorAvailabilityListView,
+    DoctorAvailabilityCreateView,DoctorAvailabilityDeleteView, DoctorAvailabilityUpdateView, get_prescriptions
 )
 
 
 router = DefaultRouter()
 router.register(r'appointments', AppointmentViewSet, basename='appointment')
 router.register(r'consultations', ConsultationViewSet, basename='consultation')
+router.register(r'availability', DoctorAvailabilityViewSet, basename='availability')
 
 urlpatterns =[
     path('api/', include(router.urls)),
+    
     path("appointments/book/", BookAppointmentView.as_view(), name='book-appointment'),
     path("appointments/", AppointmentListView.as_view(), name="appointments_list"),
     path('appointments/<int:pk>/', AppointmentDetailView.as_view(), name='appointment-detail'),
@@ -28,4 +31,11 @@ urlpatterns =[
     path('pharmacist/prescriptions/', PharmacistPrescriptionListView.as_view(), name='pharmacist-prescriptions'),
     path('pharmacist/prescriptions/<int:pk>/serve/', MarkPrescriptionAsServedView.as_view(), name='mark-prescription-served'),
     path('api/pharmacist/prescriptions/', get_prescriptions, name='get_prescriptions'),
+
+# Doctor Availability
+    path('availability/', DoctorAvailabilityListView.as_view(), name='availability-list'),
+    path('availability/create/', DoctorAvailabilityCreateView.as_view(), name='availability-create'),
+    path('availability/<int:pk>/edit/', DoctorAvailabilityUpdateView.as_view(), name='availability-edit'),
+    path('availability/<int:pk>/delete/', DoctorAvailabilityDeleteView.as_view(), name='availability-delete'),
+
 ]

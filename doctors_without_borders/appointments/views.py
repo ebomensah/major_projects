@@ -1,8 +1,8 @@
-from .models import Consultation, Appointment
+from .models import Consultation, Appointment, Availability
 from .permissions import DoctorsOnly
-from .serializers import AppointmentSerializer, ConsultationSerializer
+from .serializers import AppointmentSerializer, ConsultationSerializer, AvailabilitySerializer
 from rest_framework.permissions import IsAuthenticated
-from rest_framework import viewsets, status 
+from rest_framework import viewsets, status, generics 
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import ListAPIView, UpdateAPIView
 from rest_framework.response import Response
@@ -16,9 +16,15 @@ from django.urls import reverse_lazy
 from django.views.generic.edit import CreateView
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
-from .forms import AppointmentForm, ConsultationForm
+from .forms import AppointmentForm, ConsultationForm, AvailabilityForm
 from django.contrib import messages
 
+from .models import Availability
+from .serializers import AvailabilitySerializer
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView
+from .models import Availability
+from django.urls import reverse_lazy
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 
 
 def get_prescriptions(request):
@@ -208,3 +214,59 @@ class ConsultationViewSet(viewsets.ModelViewSet):
         instance.delete()
 
 
+
+# AVAILABILITY VIEW
+
+
+class DoctorAvailabilityViewSet(viewsets.ModelViewSet):
+    queryset = Availability.objects.all()
+    serializer_class = AvailabilitySerializer
+    permission_classes = [IsAuthenticated, DoctorsOnly]
+
+    def get_queryset(self):
+        # Only return availability blocks for the logged-in doctor
+        return Availability.objects.filter(doctor=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(doctor=self.request.user)
+
+
+class DoctorAvailabilityListView(LoginRequiredMixin, ListView):
+    model = Availability
+    template_name = 'availability/availability_list.html'
+    context_object_name = 'availabilities'
+
+    def get_queryset(self):
+        return Availability.objects.filter(doctor=self.request.user)
+
+
+class DoctorAvailabilityCreateView(LoginRequiredMixin, CreateView):
+    model = Availability
+    form_class = AvailabilityForm
+    template_name = 'availability/availability_form.html'
+    success_url = reverse_lazy('availability-list')
+
+    def form_valid(self, form):
+        form.instance.doctor = self.request.user
+        return super().form_valid(form)
+
+
+class DoctorAvailabilityUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Availability
+    form_class = AvailabilityForm
+    template_name = 'availability/availability_form.html'
+    success_url = reverse_lazy('availability-list')
+
+    def test_func(self):
+        availability = self.get_object()
+        return self.request.user == availability.doctor
+
+
+class DoctorAvailabilityDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Availability
+    template_name = 'availability/availability_confirm_delete.html'
+    success_url = reverse_lazy('availability-list')
+
+    def test_func(self):
+        availability = self.get_object()
+        return self.request.user == availability.doctor
