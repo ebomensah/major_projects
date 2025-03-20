@@ -8,15 +8,25 @@ venv
 # Ignore Python compiled files and bytecode
 *.pyc
 __pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+*.pyo
 
 # Ignore SQLite database file
 db.sqlite3
 
-# Ignore media files (like uploaded files in Django)
+# Django specific
 media/
+staticfiles/
+*.log
 
 # macOS specific
 .DS_Store
+
+# IDE/editor stuff
+.vscode/
+.idea/
 
 # Ignore log files
 *.log
@@ -30,3 +40,7 @@ media/
 
 # Node.js modules
 node_modules/
+
+# Swap files
+*.swp
+*.swo

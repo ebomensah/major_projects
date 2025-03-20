@@ -1,7 +1,9 @@
 from django.contrib import admin
-from .models import Appointment, Consultation
+from .models import Appointment, Consultation, Availability
 from users.models import Profile
 from django.contrib.auth import get_user_model
+
+
 
 @admin.register(Appointment)
 class AppointmentAdmin(admin.ModelAdmin):
@@ -24,4 +26,7 @@ class ConsultationAdmin(admin.ModelAdmin):
         return obj.appointment.patient 
     
 
-# Register your models here.
+@admin.register(Availability)
+class AvailabilityAdmin(admin.ModelAdmin):
+    list_display = ['doctor', 'date', 'start_time', 'end_time', 'slot_duration']
+    list_filter = ['doctor', 'date']
