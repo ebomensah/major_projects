@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Your Availability</h2>
+<a href="{% url 'availability-create' %}">+ Add Availability</a>
+<table>
+  <thead>
+    <tr>
+      <th>Date</th><th>Start</th><th>End</th><th>Duration (min)</th><th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in availabilities %}
+    <tr>
+      <td>{{ item.date }}</td>
+      <td>{{ item.start_time }}</td>
+      <td>{{ item.end_time }}</td>
+      <td>{{ item.slot_duration }}</td>
+      <td>
+        <a href="{% url 'availability-edit' item.id %}">Edit</a> |
+        <a href="{% url 'availability-delete' item.id %}">Delete</a>
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5">No availability found.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Delete Availability</h2>
+<p>Are you sure you want to delete this availability block?</p>
+<form method="post">
+  {% csrf_token %}
+  <button type="submit">Yes, delete</button>
+  <a href="{% url 'availability-list' %}">Cancel</a>
+</form>
+{% endblock %}
