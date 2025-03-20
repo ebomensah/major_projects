@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'notifications',
     'channels',
     'chat',
+    "dwb_calendar",
 ]
 
 MIDDLEWARE = [
@@ -138,6 +139,7 @@ USE_TZ = True
 STATICFILES_DIRS =[
     BASE_DIR / "static",
 ]
+
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = '/media/'
