@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="display: flex; gap: 2rem; align-items: flex-start;">
+
+  <!-- Sidebar: Doctor List -->
+  <div style="width: 250px; background: #fff; padding: 1rem; border-radius: 8px; box-shadow: 0 0 5px rgba(0,0,0,0.1); max-height: 600px; overflow-y: auto;">
+    <h3>Available Doctors</h3>
+    {% for availability in availabilities %}
+      <div style="margin-bottom: 1rem; border-bottom: 1px solid #eee; padding-bottom: 0.5rem;">
+        <strong>{{ availability.doctor.get_full_name }}</strong><br>
+        <small>{{ availability.date }} | {{ availability.start_time }} - {{ availability.end_time }}</small>
+      </div>
+    {% empty %}
+      <p>No doctors found</p>
+    {% endfor %}
+  </div>
+
+  <!-- Main Calendar -->
+  <div style="flex: 1;">
+    <h2>Doctor Availability Calendar</h2>
+    <div class="calendar-nav" style="margin-bottom: 1rem;">
+      <a href="?month={{ month|add:"-1" }}&year={{ year }}">Previous</a> |
+      <a href="?month={{ month|add:"1" }}&year={{ year }}">Next</a>
+    </div>
+
+    <div class="calendar-container">
+      {{ calendar|safe }}
+    </div>
+  </div>
+
+</div>
+<!-- Modal Container -->
+<div id="bookingModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:999;">
+  <div style="background:#fff; max-width:500px; margin:10% auto; padding:20px; border-radius:8px; position:relative;">
+    <button onclick="closeModal()" style="position:absolute; top:10px; right:15px;">×</button>
+    <h3>Book Appointment</h3>
+    <form id="modalForm" method="GET" action="{% url 'calendar-book' %}">
+      <input type="hidden" name="availability" id="modalAvailabilityId">
+      <p id="modalDoctor"></p>
+      <p id="modalDate"></p>
+      <p id="modalTime"></p>
+      <button type="submit">Continue to Book</button>
+    </form>
+  </div>
+</div>
+
+
+{% block extra_scripts %}
+<script>
+  function openModal(availabilityId, doctor, date, start, end) {
+    document.getElementById("modalAvailabilityId").value = availabilityId;
+    document.getElementById("modalDoctor").textContent = `Doctor: Dr. ${doctor}`;
+    document.getElementById("modalDate").textContent = `Date: ${date}`;
+    document.getElementById("modalTime").textContent = `Time: ${start} - ${end}`;
+    document.getElementById("bookingModal").style.display = "block";
+  }
+
+  function closeModal() {
+    document.getElementById("bookingModal").style.display = "none";
+  }
+</script>
+{% endblock extra_scripts %}
+
+
+{% endblock %}
