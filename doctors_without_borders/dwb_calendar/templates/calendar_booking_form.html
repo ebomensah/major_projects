@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>Book an Appointment with Dr. {{ availability.doctor.get_full_name }}</h2>
+  <p><strong>Date:</strong> {{ availability.date }}</p>
+  <p><strong>Time Window:</strong> {{ availability.start_time }} - {{ availability.end_time }}</p>
+
+  <form method="POST">
+    {% csrf_token %}
+    <div>
+      {{ form.time_slot.label_tag }}<br>
+      {{ form.time_slot }}
+    </div>
+
+    <div>
+      {{ form.reason.label_tag }}<br>
+      {{ form.reason }}
+    </div>
+
+    <div>
+      {{ form.notes.label_tag }}<br>
+      {{ form.notes }}
+    </div>
+
+    <button type="submit">Book Appointment</button>
+  </form>
+
+  <br>
+  <a href="{% url 'calendar-view' %}">← Back to Calendar</a>
+{% endblock %}

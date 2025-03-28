@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>Doctor Availability Calendar</h2>
+
+  <div class="calendar-nav">
+    <a href="?month={{ month|add:"-1" }}&year={{ year }}">Previous</a>
+    |
+    <a href="?month={{ month|add:"1" }}&year={{ year }}">Next</a>
+  </div>
+
+  <div class="calendar-container">
+    {{ calendar|safe }}
+  </div>
+{% endblock %}
