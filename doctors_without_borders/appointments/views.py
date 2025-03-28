@@ -85,6 +85,19 @@ class BookAppointmentView(CreateView):
     template_name = 'appointments/appointment_form.html'
     success_url = reverse_lazy('appointments_list')  # Redirect to the appointments list page after booking
 
+    def get_initial(self):
+        initial = super().get_initial()
+        doctor_id = self.request.GET.get('doctor')
+        date_time = self.request.GET.get('date_time')
+
+        if doctor_id:
+            initial['doctor'] = doctor_id
+        if date_time:
+            initial['date_time'] = date_time
+
+        return initial
+
+
     def form_valid(self, form):
         # Set the logged-in user as the patient of the appointment
         form.instance.patient = self.request.user
@@ -270,3 +283,13 @@ class DoctorAvailabilityDeleteView(LoginRequiredMixin, UserPassesTestMixin, Dele
     def test_func(self):
         availability = self.get_object()
         return self.request.user == availability.doctor
+
+
+# PATIENTS AVAILABILTIY VIEW
+class AvailableDoctorsListView(LoginRequiredMixin, ListView):
+    model = Availability
+    template_name = 'appointments/available_doctors.html'
+    context_object_name = 'availabilities'
+
+    def get_queryset(self):
+        return Availability.objects.all().order_by('date')
