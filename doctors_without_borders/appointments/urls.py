@@ -8,7 +8,7 @@ from .views import (
     PharmacistPrescriptionListView, MarkPrescriptionAsServedView,  DoctorAvailabilityListView,
     DoctorAvailabilityCreateView,DoctorAvailabilityDeleteView, DoctorAvailabilityUpdateView, get_prescriptions
 )
-
+from .views import AvailableDoctorsListView
 
 router = DefaultRouter()
 router.register(r'appointments', AppointmentViewSet, basename='appointment')
@@ -23,6 +23,11 @@ urlpatterns =[
     path('appointments/<int:pk>/', AppointmentDetailView.as_view(), name='appointment-detail'),
     path('appointments/<int:pk>/update/', AppointmentUpdateView.as_view(), name='appointment-update'),
     path('appointments/<int:pk>/delete/', AppointmentDeleteView.as_view(), name='appointment-delete'),
+
+    # Show all available slots (for patient to choose from)
+    path('appointments/available-doctors/', AvailableDoctorsListView.as_view(), name='available-doctors'),
+
+    # Consultations
     path("consultations/create/<int:appointment_id>/", ConsultationCreateView.as_view(), name='create-consultation'),
     path("consultations/", ConsultationListView.as_view(), name="consultations_list"),
     path('consultations/<int:pk>/', ConsultationDetailView.as_view(), name='consultation-detail'),
@@ -38,4 +43,6 @@ urlpatterns =[
     path('availability/<int:pk>/edit/', DoctorAvailabilityUpdateView.as_view(), name='availability-edit'),
     path('availability/<int:pk>/delete/', DoctorAvailabilityDeleteView.as_view(), name='availability-delete'),
 
+# PatientBooking
+    
 ]
