@@ -85,6 +85,7 @@
 
                     {% if user.role == 'patient' or user.role == 'admin' %}
                         <li><a href="{% url 'appointments_list' %}">Appointments</a></li>
+                        <li><a href="{% url 'available-doctors' %}">Book</a></li>
                     {% endif %}
 
                     {% if user.role == 'doctor' or user.role == 'admin' %}

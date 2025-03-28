@@ -1,18 +1,23 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h2> Your Appointments</h2>
-    <ul>
-        {% for appointment in appointments %}
-            <li>
-                <a href="{% url 'appointment-detail' appointment.id %}">
-                {{ appointment.patient }}'s appointment with {{ appointment.doctor }} on {{ appointment.date_time}} for complaint: '{{appointment.reason}}'
-                </a>
-            </li>
-        {% empty %}
-            <h4>You have no new appointments<h4>
-        {% endfor %}
-    </ul>
+    <h2>Your Appointments</h2>
 
-    <p>Click<a href="{% url 'book-appointment' %}"> here</a>  to book a new appointment </p>
+    {% if not appointments %}
+        <p><strong>You have no new appointments</strong></p>
+
+        <p>
+          Click <a href="{% url 'available-doctors' %}">here</a> to view available doctors and book an appointment.
+        </p>
+    {% else %}
+        <ul>
+            {% for appointment in appointments %}
+                <li>
+                    <a href="{% url 'appointment-detail' appointment.id %}">
+                        {{ appointment.patient }}'s appointment with {{ appointment.doctor }} on {{ appointment.date_time }} for complaint: '{{ appointment.reason }}'
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
 {% endblock %}

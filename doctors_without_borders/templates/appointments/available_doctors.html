@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>Available Doctors & Time Slots</h2>
+
+  <ul>
+    {% for availability in availabilities %}
+      <li>
+        <strong>Dr. {{ availability.doctor.get_full_name }}</strong><br>
+        Date: {{ availability.date }}<br>
+        Time: {{ availability.start_time }} - {{ availability.end_time }}
+
+        <form method="get" action="{% url 'book-appointment' %}">
+          <input type="hidden" name="doctor" value="{{ availability.doctor.id }}">
+          <input type="hidden" name="date_time" value="{{ availability.date }}T{{ availability.start_time }}">
+          <button type="submit">Book this slot</button>
+        </form>
+      </li>
+    {% empty %}
+      <li>No available slots at the moment.</li>
+    {% endfor %}
+  </ul>
+{% endblock %}
