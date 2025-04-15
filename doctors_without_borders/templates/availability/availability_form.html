@@ -4,7 +4,56 @@
 <form method="post">
   {% csrf_token %}
   {{ form.as_p }}
+  {% if total_hours %}
+    <p><strong>Total Available Hours:</strong> {{ total_hours|floatformat:2 }} hrs</p>
+    <p><strong>Estimated Patient Slots:</strong> {{ slot_count }}</p> 
+    <p>Slots Available: {{ availability.available_slots }} / {{ availability.total_slots }}</p>
+
+  {% endif %}
+
   <button type="submit">Save</button>
   <a href="{% url 'availability-list' %}">Cancel</a>
 </form>
+
+<script>
+  const startTimeInput = document.getElementById("id_start_time");
+  const endTimeInput = document.getElementById("id_end_time");
+  const slotDurationInput = document.getElementById("id_slot_duration");
+
+  const totalHoursEl = document.getElementById("total-hours");
+  const slotCountEl = document.getElementById("slot-count");
+
+  function updateFeedback() {
+    const startTime = startTimeInput.value;
+    const endTime = endTimeInput.value;
+    const slotDuration = parseInt(slotDurationInput.value);
+
+    if (startTime && endTime && !isNaN(slotDuration)) {
+      const [startHour, startMin] = startTime.split(":").map(Number);
+      const [endHour, endMin] = endTime.split(":").map(Number);
+
+      const start = startHour * 60 + startMin;
+      const end = endHour * 60 + endMin;
+      const duration = end - start;
+
+      if (duration > 0 && duration >= slotDuration) {
+        const totalHours = (duration / 60).toFixed(2);
+        const slotCount = Math.floor(duration / slotDuration);
+
+        totalHoursEl.textContent = `Total Available Hours: ${totalHours} hrs`;
+        slotCountEl.textContent = `Estimated Patient Slots: ${slotCount}`;
+      } else {
+        totalHoursEl.textContent = `Invalid time range or slot too long`;
+        slotCountEl.textContent = ``;
+      }
+    } else {
+      totalHoursEl.textContent = ``;
+      slotCountEl.textContent = ``;
+    }
+  }
+
+  startTimeInput.addEventListener("input", updateFeedback);
+  endTimeInput.addEventListener("input", updateFeedback);
+  slotDurationInput.addEventListener("input", updateFeedback);
+</script>
 {% endblock %}
