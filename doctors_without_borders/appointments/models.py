@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from users.models import CustomUser 
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 
 class Appointment(models.Model):
@@ -17,13 +17,14 @@ class Appointment(models.Model):
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default = 'scheduled')
     reason = models.TextField(blank= True, null=True)
     notes = models.TextField(blank=True, null=True)
-    # availability = models.ForeignKey(Availability, on_delete=models.CASCADE)
+    availability = models.ForeignKey('Availability', on_delete=models.CASCADE, related_name='appointments', null=True, blank=True)
     
     def __str__(self):
         return f"{self.patient.title} {self.patient.first_name} {self.patient.last_name}'s Appointment with Dr. {self.doctor.first_name} {self.doctor.last_name} on {self.date_time}"
 
     class Meta:
         ordering = ['date_time'] 
+
 
 
 class Availability(models.Model):
@@ -38,6 +39,26 @@ class Availability(models.Model):
 
     def __str__(self):
         return f"{self.doctor.get_full_name()} available on {self.date} from {self.start_time} to {self.end_time}"
+
+    @property
+    def total_slots(self):
+        total_minutes = (datetime.combine(self.date, self.end_time) - datetime.combine(self.date, self.start_time)).total_seconds() / 60
+        return int(total_minutes // self.slot_duration)
+
+    @property
+    def booked_slots(self):
+        return self.appointments.count()
+
+    @property
+    def available_slots(self):
+        return max(0, self.total_slots - self.booked_slots)
+
+    def calculate_total_hours(self):
+        delta = datetime.combine(self.date, self.end_time) - datetime.combine(self.date, self.start_time)
+        return delta.total_seconds() / 3600
+
+    def calculate_slot_count(self):
+        return self.total_slots
 
 
 
