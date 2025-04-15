@@ -263,6 +263,22 @@ class DoctorAvailabilityCreateView(LoginRequiredMixin, CreateView):
         form.instance.doctor = self.request.user
         return super().form_valid(form)
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Only add total_hours and slot_count if the object exists (i.e., on edit, or if form is bound)
+        form = context.get('form')
+        if form and form.is_bound and form.is_valid():
+            start_time = form.cleaned_data.get('start_time')
+            end_time = form.cleaned_data.get('end_time')
+            slot_duration = form.cleaned_data.get('slot_duration')
+            if start_time and end_time and slot_duration:
+                from datetime import datetime, date
+                total_minutes = (datetime.combine(date.today(), end_time) - datetime.combine(date.today(), start_time)).total_seconds() / 60
+                context['total_hours'] = total_minutes / 60
+                context['slot_count'] = int(total_minutes // slot_duration)
+        return context
+
+
 
 class DoctorAvailabilityUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Availability
@@ -273,6 +289,14 @@ class DoctorAvailabilityUpdateView(LoginRequiredMixin, UserPassesTestMixin, Upda
     def test_func(self):
         availability = self.get_object()
         return self.request.user == availability.doctor
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        availability = self.object
+
+        context['total_hours'] = availability.calculate_total_hours()
+        context['slot_count'] = availability.calculate_slot_count()
+        return context
 
 
 class DoctorAvailabilityDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
